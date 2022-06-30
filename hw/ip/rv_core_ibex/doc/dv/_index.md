@@ -41,3 +41,14 @@ Due to the simplicity of the additional `rv_core_ibex` features, the existence o
 The TL-UL <-> Ibex memory protocol contains minimal logic so again code and expression coverage will suffice with one exception.
 The iside and dside Ibex interfaces can have up to 8 or 2 outstanding requests respectively, we need to ensure these scenarios are seen.
 An SVA cover expression will be used to produce coverage for this.
+
+## Building and running tests
+We are using our in-house developed [regression tool]({{< relref "hw/dv/tools/README.md" >}}) for building and running our tests and regressions.
+Please take a look at the link for detailed information on the usage, capabilities, features and known issues.
+Here's how to run a smoke test:
+```console
+$ $REPO_TOP/util/dvsim/dvsim.py $REPO_TOP/hw/ip/rv_core_ibex/dv/rv_core_ibex_sim_cfg.hjson -i rv_core_ibex_smoke
+```
+
+## Testplan
+{{< incGenFromIpDesc "../../data/rv_core_ibex_testplan.hjson" "testplan" >}
