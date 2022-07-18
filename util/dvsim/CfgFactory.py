@@ -8,10 +8,11 @@ import os
 
 from CfgJson import load_hjson
 
-import FormalCfg
 import CdcCfg
-import RdcCfg
+import CosimCfg
+import FormalCfg
 import LintCfg
+import RdcCfg
 import SimCfg
 import SynCfg
 
@@ -44,10 +45,11 @@ def _load_cfg(path, initial_values):
     classes = [
         RdcCfg.RdcCfg,
         CdcCfg.CdcCfg,
-        LintCfg.LintCfg,
-        SynCfg.SynCfg,
+        CosimCfg.CosimCfg,
         FormalCfg.FormalCfg,
-        SimCfg.SimCfg
+        LintCfg.LintCfg,
+        SimCfg.SimCfg,
+        SynCfg.SynCfg,
     ]
     found_cls = None
     known_types = []

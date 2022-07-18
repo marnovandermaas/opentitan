@@ -1,0 +1,58 @@
+// Copyright lowRISC contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{
+  flow: cosim
+  // Name of the sim cfg - typically same as the name of the DUT.
+  name: rv_core_ibex
+
+  // Top level dut name (sv module).
+  dut: rv_core_ibex
+
+  // Simulator used to sign off this block
+  tool: vcs
+
+  // Fusesoc core file used for building the file list.
+  // fusesoc_core: lowrisc:dv:rv_core_ibex_sim:0.1
+
+  // Testplan hjson file.
+  // testplan: "{proj_root}/hw/ip/rv_core_ibex/data/rv_core_ibex_testplan.hjson"
+
+  // Import additional common sim cfg files.
+  import_cfgs: ["{proj_root}/hw/data/common_project_cfg.hjson",]
+
+  // Add additional tops for simulation.
+  sim_tops: []
+
+  // Default iterations for all tests - each test entry can override this.
+  reseed: 1
+
+  // Build parameters
+  build_cmd: "echo 'build cmd from core ibex sim cfg hjson'"
+  build_dir: "{scratch_path}/{build_mode}"
+  build_log: "{build_dir}/{tool}.log"
+  build_fail_patterns: []
+  sv_flist_gen_cmd: ""
+  sv_flist_gen_opts: []
+  sv_flist_gen_dir: ""
+
+  // The default build mode, used for the tests explicitly listed below does not
+  // require any pre-build steps.
+  build_modes: [
+    {
+      name: default
+      pre_build_cmds: [
+        "echo 'default pre build cmd from rv core ibex sim cfg hjson'"
+      ]
+    }
+  ]
+
+  // List of test specifications.
+  tests: [
+    // {
+    //   name: "rv_core_ibex_cosim"
+    //   en_run_modes: ["ibex_cosim_mode"]
+    //   reseed: 1
+    // }
+  ]
+}
