@@ -3,6 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 {
   flow: cosim
+
+  // Where to find DV code
+  cosim_root:       "{proj_root}/hw/ip/rv_core_ibex"
+  dv_root:          "{proj_root}/hw/dv"
+  // TODO change this to vendor/lowrisc_ibex/dv/uvm/core_ibex/Makefile
+  flow_makefile:    "{cosim_root}/dv/cosim.mk"
+
   // Name of the sim cfg - typically same as the name of the DUT.
   name: rv_core_ibex
 
