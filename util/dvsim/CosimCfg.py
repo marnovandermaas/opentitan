@@ -39,23 +39,9 @@ class CosimCfg(FlowCfg):
 
     def __init__(self, flow_cfg_file, hjson_data, args, mk_config):
         print("CosimCfg.py: Placeholder __init__")
-        # Options set from command line
-        self.tool = args.tool
-        self.verbose = args.verbose
-        self.flist_gen_cmd = ""
-        self.flist_gen_opts = []
-        self.sv_flist_gen_dir = ""
-        self.flist_file = ""
-        self.build_cmd = ""
-        self.build_opts = []
-        self.build_log = ""
-        self.report_cmd = ""
-        self.report_opts = []
-        self.build_opts.extend(args.build_opts)
-        self.build_unique = args.build_unique
-        self.build_only = args.build_only
 
         # Objects to be populated
+        self.build_opts = []
         self.deploy = []
         self.build_list = []
         self.links = {}

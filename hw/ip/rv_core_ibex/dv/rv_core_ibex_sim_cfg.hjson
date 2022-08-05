@@ -17,7 +17,7 @@
   dut: rv_core_ibex
 
   // Simulator used to sign off this block
-  tool: vcs
+  tool: uvm
 
   // Fusesoc core file used for building the file list.
   // fusesoc_core: lowrisc:dv:rv_core_ibex_sim:0.1
@@ -35,22 +35,22 @@
   reseed: 1
 
   // Build parameters
-  build_cmd: "echo 'build cmd from core ibex sim cfg hjson'"
+  build_cmd: "make -j7 --keep-going IBEX_CONFIG=opentitan ITERATIONS=1 TEST=riscv_arithmetic_basic_test WAVES=0 COV=0"
   build_dir: "{scratch_path}/{build_mode}"
   build_log: "{build_dir}/{tool}.log"
   build_fail_patterns: []
   sv_flist_gen_cmd: ""
   sv_flist_gen_opts: []
-  sv_flist_gen_dir: ""
+  sv_flist_gen_dir: "{proj_root}/hw/vendor/lowrisc_ibex/dv/uvm/core_ibex/"
 
   // The default build mode, used for the tests explicitly listed below does not
   // require any pre-build steps.
   build_modes: [
     {
       name: default
-      pre_build_cmds: [
-        "echo 'default pre build cmd from rv core ibex sim cfg hjson'"
-      ]
+      // pre_build_cmds: [
+      //   "echo 'default pre build cmd from rv core ibex sim cfg hjson'"
+      // ]
     }
   ]
 
