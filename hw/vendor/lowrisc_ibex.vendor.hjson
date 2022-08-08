@@ -20,6 +20,7 @@
     "util",
     "vendor/google_riscv-dv",
 
+    ".gitignore",
     "ibex_configs.yaml",
 
     "ibex_core.core",
