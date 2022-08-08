@@ -321,6 +321,8 @@ class Mapping1:
         # Apply any patches to the copied files. If self.patch_dir is None,
         # there are none to apply. Otherwise, resolve it relative to patch_dir.
         if self.patch_dir is not None:
+            if not (Path.cwd() / patch_dir / self.patch_dir).exists():
+                log.warning("The patch dir does not exist {}".format(patch_dir / self.patch_dir))
             patches = (patch_dir / self.patch_dir).glob('*.patch')
             for patch in sorted(patches):
                 log.info("Applying patch {} at {}".format(patch, to_path))
