@@ -35,7 +35,7 @@
   reseed: 1
 
   // Build parameters
-  build_cmd: "make -j7 --keep-going IBEX_CONFIG=opentitan ITERATIONS=1 TEST=riscv_arithmetic_basic_test WAVES=0 COV=0"
+  build_cmd: "make clean; make -j7 --keep-going IBEX_CONFIG=opentitan ITERATIONS=1 TEST=riscv_arithmetic_basic_test WAVES=0 COV=1vim "
   build_dir: "{scratch_path}/{build_mode}"
   build_log: "{build_dir}/{tool}.log"
   build_fail_patterns: []
