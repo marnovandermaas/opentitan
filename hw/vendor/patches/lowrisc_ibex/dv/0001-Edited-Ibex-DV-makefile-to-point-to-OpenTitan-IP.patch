@@ -1,0 +1,25 @@
+From 2d7de363e2f8083fd5f978959d6498ad0d06b2f6 Mon Sep 17 00:00:00 2001
+From: Marno van der Maas <mvdmaas+git@lowrisc.org>
+Date: Mon, 8 Aug 2022 16:09:16 +0100
+Subject: [PATCH] [dv] Point to OpenTitan IP for vendored in version
+
+---
+ uvm/core_ibex/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/uvm/core_ibex/Makefile b/uvm/core_ibex/Makefile
+index ec52f116..23b838a5 100644
+--- a/uvm/core_ibex/Makefile
++++ b/uvm/core_ibex/Makefile
+@@ -70,7 +70,7 @@ verb = $(if $(filter-out 0,$(VERBOSE)),,@)
+ SHELL=/bin/bash
+ 
+ export PRJ_DIR        := $(realpath ../../..)
+-export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/vendor/lowrisc_ip)
++export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/../..)
+ 
+ all: core_config sim
+ 
+-- 
+2.25.1
+
