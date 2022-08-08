@@ -70,7 +70,7 @@ verb = $(if $(filter-out 0,$(VERBOSE)),,@)
 SHELL=/bin/bash
 
 export PRJ_DIR        := $(realpath ../../..)
-export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/../..)
+export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/vendor/lowrisc_ip)
 
 all: core_config sim
 
