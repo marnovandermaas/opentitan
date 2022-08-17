@@ -11,15 +11,15 @@ diff --git a/uvm/core_ibex/Makefile b/uvm/core_ibex/Makefile
 index ec52f116..23b838a5 100644
 --- a/uvm/core_ibex/Makefile
 +++ b/uvm/core_ibex/Makefile
-@@ -70,7 +70,7 @@ verb = $(if $(filter-out 0,$(VERBOSE)),,@)
- SHELL=/bin/bash
- 
+@@ -89,7 +89,7 @@ verb = $(if $(filter-out 0,$(VERBOSE)),,@)
+ export IBEX_ROOT      := $(realpath ../../../)
  export PRJ_DIR        := $(realpath ../../..)
 -export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/vendor/lowrisc_ip)
 +export LOWRISC_IP_DIR := $(realpath ${PRJ_DIR}/../..)
  
- all: core_config sim
- 
+ # Needed for tcl files that are used with Cadence tools.
+ export dv_root := $(realpath ../../../vendor/lowrisc_ip/dv)
+ export DUT_TOP := dut
 -- 
 2.25.1
 
