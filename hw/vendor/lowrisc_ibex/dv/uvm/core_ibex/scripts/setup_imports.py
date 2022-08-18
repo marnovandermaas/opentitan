@@ -13,7 +13,7 @@ def get_project_root() -> pathlib.Path:
     return pathlib.Path(git.Repo('.', search_parent_directories=True).working_tree_dir)
 
 
-root = get_project_root()
+root = get_project_root()/'hw'/'vendor'/'lowrisc_ibex'
 _IBEX_ROOT = root
 _IBEX_UTIL = root/'util'
 _CORE_IBEX = root/'dv'/'uvm'/'core_ibex'
@@ -22,7 +22,7 @@ _CORE_IBEX_RISCV_DV_EXTENSION = _CORE_IBEX/'riscv_dv_extension'
 _CORE_IBEX_YAML = _CORE_IBEX/'yaml'
 _RISCV_DV = root/'vendor'/'google_riscv-dv'
 _RISCV_DV_SCRIPTS = _RISCV_DV/'scripts'
-_OT_LOWRISC_IP = root/'vendor'/'lowrisc_ip'
+_OT_LOWRISC_IP = get_project_root()/'hw'
 
 
 
