@@ -1,0 +1,35 @@
+From c06f7be02fffa17a587c8e5a72ee77393467fabe Mon Sep 17 00:00:00 2001
+From: Marno van der Maas <mvdmaas+git@lowrisc.org>
+Date: Thu, 18 Aug 2022 15:43:21 +0100
+Subject: [PATCH] [dv] Changes necessary to run Ibex DV in OpenTitan
+
+Signed-off-by: Marno van der Maas <mvdmaas+git@lowrisc.org>
+---
+ uvm/core_ibex/scripts/setup_imports.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/uvm/core_ibex/scripts/setup_imports.py b/uvm/core_ibex/scripts/setup_imports.py
+index 78b75bb9..9daf17aa 100755
+--- a/uvm/core_ibex/scripts/setup_imports.py
++++ b/uvm/core_ibex/scripts/setup_imports.py
+@@ -13,7 +13,7 @@ def get_project_root() -> pathlib.Path:
+     return pathlib.Path(git.Repo('.', search_parent_directories=True).working_tree_dir)
+ 
+ 
+-root = get_project_root()
++root = get_project_root()/'hw'/'vendor'/'lowrisc_ibex'
+ _IBEX_ROOT = root
+ _IBEX_UTIL = root/'util'
+ _CORE_IBEX = root/'dv'/'uvm'/'core_ibex'
+@@ -22,7 +22,7 @@ _CORE_IBEX_RISCV_DV_EXTENSION = _CORE_IBEX/'riscv_dv_extension'
+ _CORE_IBEX_YAML = _CORE_IBEX/'yaml'
+ _RISCV_DV = root/'vendor'/'google_riscv-dv'
+ _RISCV_DV_SCRIPTS = _RISCV_DV/'scripts'
+-_OT_LOWRISC_IP = root/'vendor'/'lowrisc_ip'
++_OT_LOWRISC_IP = get_project_root()/'hw'
+ 
+ 
+ 
+-- 
+2.25.1
+
