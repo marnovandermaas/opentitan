@@ -35,6 +35,9 @@
   gen_opts: >
     +instr_cnt=10000
     +num_of_sub_program=5
+    +gen_all_csrs_by_default=1
+    +add_csr_write=MSTATUS,MEPC,MCAUSE,MTVAL
+    +no_csr_instr=0
   rtl_test: core_ibex_base_test
 
 - test: riscv_rand_jump_test
@@ -740,15 +743,13 @@
     and allow PMP regions to overlap.
     A large number of iterations will be required since this introduces a huge
     state space of configurations.
-  iterations: 5
+  iterations: 20
   gen_test: riscv_rand_instr_test
   gen_opts: >
     +instr_cnt=6000
     +pmp_max_offset=00024000
-    +set_mstatus_mprv=1
     +pmp_randomize=1
     +pmp_allow_addr_overlap=1
-    +enable_write_pmp_csr=1
   rtl_test: core_ibex_base_test
   rtl_params:
     PMPEnable: 1
@@ -904,9 +905,6 @@
   rtl_params:
     PMPEnable: 1
 
-  # Disable cosim for bitmanip tests for now as Ibex implements a different
-  # version of the spec compared to the Spike version used for the cosim.
-
 # Both an updated compiler and ISS are required to verify the bitmanip v.1.00
 # and draft v.0.93 extensions. For now, disable the bitmanip tests.
 # For details, refer to https://github.com/lowRISC/ibex/issues/1470
@@ -922,7 +920,6 @@
     +enable_zbs_extension=1
     +enable_b_extension=1
     +enable_bitmanip_groups=zbe,zbf,zbp,zbr,zbt
-    +disable_cosim=1
   rtl_test: core_ibex_base_test
   rtl_params:
     RV32B: "ibex_pkg::RV32BFull"
@@ -939,7 +936,6 @@
     +enable_zbs_extension=1
     +enable_b_extension=1
     +enable_bitmanip_groups=zbf,zbp,zbr,zbt
-    +disable_cosim=1
   rtl_test: core_ibex_base_test
   rtl_params:
     RV32B: ["ibex_pkg::RV32BFull", "ibex_pkg::RV32BOTEarlGrey"]
@@ -955,7 +951,6 @@
     +enable_zbs_extension=1
     +enable_b_extension=1
     +enable_bitmanip_groups=zbf,zbt
-    +disable_cosim=1
   rtl_test: core_ibex_base_test
   rtl_params:
     RV32B: ["ibex_pkg::RV32BFull", "ibex_pkg::RV32BOTEarlGrey", "ibex_pkg::RV32BBalanced"]

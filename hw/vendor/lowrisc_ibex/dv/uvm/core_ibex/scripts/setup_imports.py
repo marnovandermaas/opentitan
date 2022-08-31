@@ -4,16 +4,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
-import git
 import pathlib3x as pathlib
 
 
 def get_project_root() -> pathlib.Path:
-    """Get the project root directory using git."""
-    return pathlib.Path(git.Repo('.', search_parent_directories=True).working_tree_dir)
+    """Get the project root directory."""
+    return pathlib.Path(__file__).resolve().parents[4]
 
 
-root = get_project_root()/'hw'/'vendor'/'lowrisc_ibex'
+root = get_project_root()
 _IBEX_ROOT = root
 _IBEX_UTIL = root/'util'
 _CORE_IBEX = root/'dv'/'uvm'/'core_ibex'
