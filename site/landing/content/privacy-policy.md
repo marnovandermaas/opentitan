@@ -1,8 +1,4 @@
----
-title: "Website Privacy and Cookies Policy"
-aliases:
-  - /privacy/
----
+# Website Privacy and Cookies Policy
 
 We take the privacy of those who visit this website seriously and we aim to be
 transparent about our processing of personal information. Accordingly, this
