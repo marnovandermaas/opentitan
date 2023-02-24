@@ -130,7 +130,7 @@ module sysrst_ctrl_combo
       .event_detected_pulse_o(combo_det_pulse)
     );
 
-    //Instantiate the combo action module
+    // Instantiate the combo action module
     sysrst_ctrl_comboact u_combo_act (
       .clk_i,
       .rst_ni,
