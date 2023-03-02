@@ -9,6 +9,8 @@ multilingual = false
 src = "."
 title = "OpenTitan Documentation"
 
+[output.katex]
+
 [output.html]
 site-url = "book/"
 fold = { enable = true}
@@ -53,3 +55,8 @@ command = "./util/mdbook_doxygen.py"
 out-dir = "build-site/gen"
 html-out-dir = "gen/doxy"
 dif-src-py-regex = 'dif_\S*\.h'
+
+[preprocessor.katex]
+renderers = ["html"]
+block-delimiter = {left = "$$", right = "$$"}
+inline-delimiter = {left = "$$$", right = "$$$"}
