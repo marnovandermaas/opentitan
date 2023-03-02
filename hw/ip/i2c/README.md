@@ -212,7 +212,8 @@ In order to claim complete compatibility at each mode, the state machine timings
 Furthermore, depending on the actual capacitance of the bus, even a bus with all Fast-mode Plus capable targets may have to operate at slower speeds than 1Mbaud.
 For example, the host may need to run at lower frequencies, as discussed in Section 5.2 of the specification, but the computation of the nominal frequency will depend on timing specifications in Table 10, in this case particularly, the limits on t<sub>LOW</sub>, t<sub>HIGH</sub>, t<sub>r</sub>, and t<sub>f</sub>.
 Assuming no clock stretching, for a given set of these four parameters the baud rate is then given to be:
-$$ 1/f\_{SCL}=t\_{LOW}+t\_{HIGH}+t\_{r}+t\_{f}. $$
+
+\\[ 1/f\_{SCL}=t\_{LOW}+t\_{HIGH}+t\_{r}+t\_{f}. \\]
 
 Thus in order to ensure compliance with the spec in any particular configuration, software will program the I2C host IP with explicit values for each of the following timing parameters, as defined in Figure 38 of the specification.
 - t<sub>LOW</sub>: set in register [`TIMING0.TLOW`](data/i2c.hjson#timing0).
@@ -419,38 +420,38 @@ Based on the inputs, the timing parameters may be chosen using the following alg
 1. The physical timing parameters t<sub>HD,STA</sub>, t<sub>SU,STA</sub>, t<sub>HD.DAT</sub>, t<sub>SU,DAT</sub>, t<sub>BUF</sub>, and t<sub>STO</sub>, t<sub>HIGH</sub>, and t<sub>LOW</sub> all have minimum allowed values which depend on the choice of speed mode (standard-mode, fast-mode or fast-mode plus).
 Using the speed mode input, look up the appropriate minimum value (in ns) for each parameter (i.e. t<sub>HD,STA,min</sub>, t<sub>SU,STA,min</sub>, etc)
 1. For each of these eight parameters, obtain an integer minimum by dividing the physical minimum parameter by the clock frequency and rounding up to the next highest integer:
-$$ \textrm{THIGH_MIN}=\lceil{t\_{HIGH,min}/t\_{clk}}\rceil $$
-$$ \textrm{TLOW_MIN}=\lceil{t\_{LOW,min}/t\_{clk}}\rceil $$
-$$ \textrm{THD_STA_MIN}= \lceil{t\_{HD,STA,min}/t\_{clk}}\rceil $$
-$$ \textrm{TSU_STA_MIN}= \lceil{t\_{SU,STA,min}/t\_{clk}}\rceil $$
-$$ \textrm{THD_DAT_MIN}= \lceil{t\_{HD,DAT,min}/t\_{clk}}\rceil $$
-$$ \textrm{TSU_DAT_MIN}= \lceil{t\_{HD,DAT,min}/t\_{clk}}\rceil $$
-$$ \textrm{T_BUF_MIN}= \lceil{t\_{BUF,min}/t\_{clk}}\rceil $$
-$$ \textrm{T_STO_MIN}= \lceil{t\_{STO,min}/t\_{clk}}\rceil $$
+\\[ \textrm{THIGH_MIN}=\lceil{t\_{HIGH,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{TLOW_MIN}=\lceil{t\_{LOW,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{THD_STA_MIN}= \lceil{t\_{HD,STA,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{TSU_STA_MIN}= \lceil{t\_{SU,STA,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{THD_DAT_MIN}= \lceil{t\_{HD,DAT,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{TSU_DAT_MIN}= \lceil{t\_{HD,DAT,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{T_BUF_MIN}= \lceil{t\_{BUF,min}/t\_{clk}}\rceil \\]
+\\[ \textrm{T_STO_MIN}= \lceil{t\_{STO,min}/t\_{clk}}\rceil \\]
 
 1. Input the integer timing parameters, THD_STA_MIN, TSU_STA_MIN, THD_DAT_MIN, TSU_DAT_MIN, T_BUF_MIN and T_STO_MIN into their corresponding registers (`TIMING2.THD_STA`, `TIMING2.TSU_STA`, `TIMING3.THD_DAT`, `TIMING3.TSU_DAT`, `TIMING4.T_BUF`, `TIMING4.T_STO`)
     - This step allows the firmware to manage SDA signal delays to ensure that the SDA outputs are compliant with the specification.
     - The registers `TIMING0.THIGH` and `TIMING0.TLOW` will be taken care of in a later step.
 1. Take the given values for for t<sub>f</sub> and t<sub>r</sub> and convert them to integer counts as well:
-$$ \textrm{T_R}= \lceil{t\_{r}/t\_{clk}}\rceil $$
-$$ \textrm{T_F}= \lceil{t\_{f}/t\_{clk}}\rceil $$
+\\[ \textrm{T_R}= \lceil{t\_{r}/t\_{clk}}\rceil \\]
+\\[ \textrm{T_F}= \lceil{t\_{f}/t\_{clk}}\rceil \\]
 1. Store T_R and T_F in their corresponding registers: `TIMING1.T_R` and `TIMING1.T_F`.
 1. Based on the input speed mode, look up the maximum permissible SCL frequency (f<sub>SCL,max</sub>)and calculate the minimum permissible SCL period:
-$$ t\_{SCL,min}= 1/f\_{SCL,max} $$
+\\[ t\_{SCL,min}= 1/f\_{SCL,max} \\]
 1. As with each of the other physical parameters convert t<sub>SCL,min</sub> and, if provided, the t<sub>SCL,user</sub> to integers, MINPERIOD and USERPERIOD..
-$$ MINPERIOD = \lceil{t\_{SCL,min}/t\_{clk}}\rceil $$
-$$ USERPERIOD = \lceil{t\_{SCL,user}/t\_{clk}}\rceil $$
+\\[ MINPERIOD = \lceil{t\_{SCL,min}/t\_{clk}}\rceil \\]
+\\[ USERPERIOD = \lceil{t\_{SCL,user}/t\_{clk}}\rceil \\]
 1. Let PERIOD=max(MINPERIOD, USERPERIOD).
 1. Each SCL cycle will now be at least PERIOD clock cycles in duration, divided between four segments: T_R, THIGH, T_F, and TLOW.
     - In other words: PERIOD=T_R+THIGH+T_F+TLOW.
     - With T_R and T_F already established, the remaining integer parameters THIGH and TLOW are to be divided among the remaining clock cycles in PERIOD:
-$$ \textrm{THIGH}+\textrm{TLOW} \ge\textrm{PERIOD}-\textrm{T_F}-\textrm{T_R} $$
+\\[ \textrm{THIGH}+\textrm{TLOW} \ge\textrm{PERIOD}-\textrm{T_F}-\textrm{T_R} \\]
     - Since t<sub>HIGH</sub> and t<sub>LOW</sub> both have minimum allowable values, which depends on the mode, high values of t<sub>r</sub> or t<sub>f</sub> may force an increase in the total SCL period, slowing down the data transit rate.
     - The balance between t<sub>HIGH</sub> and t<sub>LOW</sub> can be manipulated in a variety of different ways (depending on the desired SCL duty cycle).
     - It is, for instance, perfectly acceptable to simply set TLOW to the minimum possible value:
-$$ \textrm{TIMING0.TLOW}=\textrm{TLOW_MIN} $$
+\\[ \textrm{TIMING0.TLOW}=\textrm{TLOW_MIN} \\]
 1. THIGH is then set to satisfy both constraints in the desired SCL period and in the minimum permissible values for t<sub>HIGH</sub>:
-$$ \textrm{TIMING0.THIGH}=\max(\textrm{PERIOD}-\textrm{T_R} - \textrm{TIMING0.TLOW} -\textrm{T_F}, \textrm{THIGH_MIN}) $$
+\\[ \textrm{TIMING0.THIGH}=\max(\textrm{PERIOD}-\textrm{T_R} - \textrm{TIMING0.TLOW} -\textrm{T_F}, \textrm{THIGH_MIN}) \\]
 
 
 #### Timing parameter examples

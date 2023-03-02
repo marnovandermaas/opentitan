@@ -84,7 +84,7 @@ Once the internal duty cycle reaches the target value, the internal duty cycle b
 The PWM IP creates series of pulses with the desired on-off duty cycle.
 The duty cycle, DC, is typically expressed a fraction of pulse duration, <i>d</i>, over the period between pulses, <i>T</i>:
 
-$$DC\equiv d/T.$$
+\\[DC\equiv d/T.\\]
 
 Since 0&lt;<i>d</i>&lt;<i>T</i>, the duty cycle ranges from 0 to 1.
 
@@ -104,7 +104,7 @@ The phase delay of each channel is always directly controlled by a firmware regi
 Since the phase and duty cycle are always a fraction less than or equal to one, the PWM IP represents them as 16-bit fixed point numbers, with an implicit 16-bit shift.
 If the duty cycle is internally represented as a 16-bit value x, the output pulse train will have the duty cycle:
 
-$$DC(x)=\frac{x}{2^{16}}.$$
+\\[DC(x)=\frac{x}{2^{16}}.\\]
 
 Thus the allowed duty cycle in principle ranges from 0 to 99.998% (i.e. <nobr>1-(&frac12;)<sup>16</sup></nobr>).
 
@@ -112,7 +112,7 @@ However, the actual phase resolution may be smaller.
 In order to support faster pulse rates, the phase resolution can be set to less than 16-bits, in which case the observed duty cycle will be rounded down to the next lowest multiple of <nobr>2<sup>-([`CFG.DC_RESN`](data/pwm.hjson#cfg)+1)</sup></nobr>.
 In other words, the [`CFG.DC_RESN`](data/pwm.hjson#cfg) register effectively limits the duty cycle resolution, such that only the <nobr>[`CFG.DC_RESN`](data/pwm.hjson#cfg)+1</nobr> most significant bits are relevant:
 
-$$DC(x; \textrm{DC_RESN})=\frac{\textrm{MSB}(x; \textrm{DC_RESN}+1)}{2^{(\textrm{DC_RESN}+1)}},$$
+\\[DC(x; \textrm{DC_RESN})=\frac{\textrm{MSB}(x; \textrm{DC_RESN}+1)}{2^{(\textrm{DC_RESN}+1)}},\\]
 
 where here we use the notation MSB(<i>x</i>; <i>y</i>), to mean the <i>y</i> most significant bits of the binary value <i>x</i>.
 
@@ -126,11 +126,11 @@ Each PWM pulse cycle is divided into <nobr>2<sup>DC_RESN+1</sup></nobr> beats.
 During each beat, the 16-bit phase counter increments by 2<sup>(16-DC_RESN-1)</sup> (modulo 65536).
 The beat period is defined by the [`CFG.CLK_DIV`](data/pwm.hjson#cfg) register:
 
-$$f_\textrm{beat}=\frac{f_\textrm{core clk}}{\textrm{CLK_DIV}+1}$$
+\\[f_\textrm{beat}=\frac{f_\textrm{core clk}}{\textrm{CLK_DIV}+1}\\]
 
 A PWM pulse cycle is completed each time the phase counter overflows to 0.
 The PWM drive frequency is therefore:
-$$f_\textrm{PWM}=f_\textrm{beat}\frac{2^{16-\textrm{DC_RESN}-1}}{2^{16}}=\frac{f_\textrm{core clk}}{2^{\textrm{DC_RESN}+1}(\textrm{CLK_DIV}+1)}$$
+\\[f_\textrm{PWM}=f_\textrm{beat}\frac{2^{16-\textrm{DC_RESN}-1}}{2^{16}}=\frac{f_\textrm{core clk}}{2^{\textrm{DC_RESN}+1}(\textrm{CLK_DIV}+1)}\\]
 
 The PWM phase counter is reset whenever [`CFG.CNTR_EN`](data/pwm.hjson#cfg) is disabled.
 

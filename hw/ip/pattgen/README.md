@@ -71,7 +71,7 @@ Once the FSM is enabled, it transitions to the `ACTIVE` state.
 The clock-divide counter `clk_div` increments every cycle, except when it overflows matching the value applied to the `clk_pre_divide` input.
 Then `clk_div` resets to 0, toggling `clk_int` in the process.
 Two overflow events result in a complete clock cycle, resulting in an internal clock frequency of:
-$$f_{pclx}=\frac{f_\textrm{I/O clk}}{2(\textrm{CLK_RATIO}+1)}$$
+\\[f_{pclx}=\frac{f_\textrm{I/O clk}}{2(\textrm{CLK_RATIO}+1)}\\]
 
 The FSM clock output, `pcl`, is directly driven by `clk_int`, unless the `polarity` input is high, in which case `pcl` is inverted from `clk_int`.
 
@@ -127,7 +127,7 @@ For example, to generate an 16-bit pattern, a value of 15 should be written to t
 The first 32 bits to be transmitted, are programmed in the lower half of the multi-register (i.e. [`DATA_CH0_0`](data/pattgen.hjson#data_ch0_0)), and the latter 32 bits are programmed in the upper half of the multi-register (i.e. [`DATA_CH0_1`](data/pattgen.hjson#data_ch0_1)).
 1. Program the clock divider ratio using the register [`PREDIV_CH0.CLK_RATIO`](data/pattgen.hjson#prediv_ch0).
 The resulting clock frequency will be slower than the input I/O clock by a ratio of 2&times;(CLK_RATIO+1):
-$$f_{pclx}=\frac{f_\textrm{I/O clk}}{2(\textrm{CLK_RATIO}+1)}$$
+\\[f_{pclx}=\frac{f_\textrm{I/O clk}}{2(\textrm{CLK_RATIO}+1)}\\]
 1. Program the desired number of pattern repetitions using the repetition field [`SIZE.REPS_CH0`](data/pattgen.hjson#size).
 Note that since the allowed number of pattern repetitions ranges from 1-1024, the value of this field should be one less than the desired repetition count.
 For example, to repeat a pattern 30, a value of 29 should written to the field [`SIZE.REPS_CH0`](data/pattgen.hjson#size).

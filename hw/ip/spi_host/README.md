@@ -292,7 +292,7 @@ For this reason the maximum SCK frequency is at most one half the SPI_HOST core 
 
 Since some peripheral devices attached to the same SPI_HOST may require different clock frequencies, there is also the option to divide the core clock by an additional factor when dealing with slower peripherals.
 
-$$T_{\textrm{SCK},0}=\frac{1}{2}\frac{T_\textrm{clk}}{\textrm{CONFIGOPTS.CLKDIV}+1}$$
+\\[T_{\textrm{SCK},0}=\frac{1}{2}\frac{T_\textrm{clk}}{\textrm{CONFIGOPTS.CLKDIV}+1}\\]
 
 #### Chip-select Timing Control
 
@@ -881,7 +881,7 @@ Once the FSM transitions out of the idle state, `clk_cntr_q` resets to [`CONFIGO
 
 As shown in the waveform below, this has the effect of limiting the FSM transitions to only occur at discrete *timeslices* of duration:
 
-$$T_\textrm{timeslice} = \frac{T_{\textrm{clk},\textrm{clk}}}{\texttt{clkdiv}+1}.$$
+\\[T_\textrm{timeslice} = \frac{T_{\textrm{clk},\textrm{clk}}}{\texttt{clkdiv}+1}.\\]
 
 ```wavejson
 {signal: [

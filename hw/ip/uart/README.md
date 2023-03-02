@@ -156,13 +156,13 @@ The baud rate is set by writing to the [`CTRL.NCO`](data/uart.hjson#ctrl) regist
 set using the equation below, where `f_pclk` is the system clock frequency
 provided to the UART, and `f_baud` is the desired baud rate (in bits per second).
 
-$$ NCO = 16 \times {{2^{$bits(NCO)} \times f\_{baud}} \over {f\_{pclk}}} $$
+\\[ NCO = 16 \times {{2^{$bits(NCO)} \times f\_{baud}} \over {f\_{pclk}}} \\]
 
 The formula above depends on the NCO CSR width.
 The logic creates a x16 tick when the NCO counter overflows.
 So, the computed baud rate from NCO value is below.
 
-$$ f\_{baud} = {{1 \over 16} \times {NCO \over {2^{$bits(NCO)}}} \times {f\_{pclk}}} $$
+\\[ f\_{baud} = {{1 \over 16} \times {NCO \over {2^{$bits(NCO)}}} \times {f\_{pclk}}} \\]
 
 Note that the NCO result from the above formula can be a fraction but
 the NCO register only accepts an integer value. This will create an
@@ -177,7 +177,7 @@ rate. The contribution to this error if NCO is rounded down to an
 integer (which will make the actual baud rate always lower or equal to
 the requested rate) can be computed from:
 
-$$ Error = {{(NCO - INT(NCO))} \over {NCO}} percent $$
+\\[ Error = {{(NCO - INT(NCO))} \over {NCO}} percent \\]
 
 In this case if the resulting value of NCO is greater than $$ {1 \over
 0.025} = 40 $$ then this will always be less than the 2.5% error
@@ -190,8 +190,8 @@ an integer so that the error in the target range then the baud rate
 can be supported, however if it is too far off an integer then the
 baud rate cannot be supported. This check is needed when
 
-$$ {{baud} < {{40 * f\_{pclk}} \over {2^{$bits(NCO)+4}}}} \qquad OR \qquad
-{{f\_{pclk}} > {{{2^{$bits(NCO)+4}} * {baud}} \over {40}}} $$
+\\[ {{baud} < {{40 * f\_{pclk}} \over {2^{$bits(NCO)+4}}}} \qquad OR \qquad
+{{f\_{pclk}} > {{{2^{$bits(NCO)+4}} * {baud}} \over {40}}} \\]
 
 Using rounded frequencies and common baud rates, this implies that
 care is needed for 9600 baud and below if the system clock is under
@@ -330,7 +330,7 @@ and should be set using the equation below, where `f_pclk` is the fixed clock
 frequency and `f_baud` is the baud rate in bits per second. The UART uses the
 primary clock `clk_i` as a clock source.
 
-$$ NCO = {{2^{20} * f\_{baud}} \over {f\_{pclk}}} $$
+\\[ NCO = {{2^{20} * f\_{baud}} \over {f\_{pclk}}} \\]
 
 Note that the NCO result from the above formula can be a fraction but
 the NCO register only accepts an integer value. See the the
