@@ -43,10 +43,10 @@
   regwidth: "32",
   param_list: [
     { name: "ByteOrder",
-      desc: '''Byte order to use when transmitting or receiving data.  If ByteOrder = 0,
+      desc: '''Byte order to use when transmitting or receiving data. If ByteOrder = 0,
                the IP uses a Big-Endian ordering for the bytes in DATA.
                The most significant byte (MSB) of DATA is transmitted first, and
-               received data is placed in the MSB location of DATA.  If ByteOrder = 1,
+               received data is placed in the MSB location of DATA. If ByteOrder = 1,
                a Little-Endian ordering is used for these registers, and the LSB of each
                gets priority for receiving and transmitting data.'''
       type: "logic",
@@ -78,7 +78,7 @@
       desc:  "SPI Clock"
     },
     { name:  "csb"
-      desc:  '''Chip Select# (One hot, active low).  The size of this port should match NumCS.'''
+      desc:  '''Chip Select# (One hot, active low). The size of this port should match NumCS.'''
       width: "1"
     }
   ],
@@ -118,7 +118,7 @@
       fields: [
         { bits: "31",
           name: "SPIEN",
-          desc: '''Enables the SPI host.  On reset, this field is 0, meaning
+          desc: '''Enables the SPI host. On reset, this field is 0, meaning
                    that no transactions can proceed.'''
           resval: "0x0"
         },
@@ -133,7 +133,7 @@
         },
         { bits: "29",
           name: "OUTPUT_EN",
-          desc: '''Enable the SPI host output buffers for the sck, csb, and sd lines.  This allows
+          desc: '''Enable the SPI host output buffers for the sck, csb, and sd lines. This allows
                    the SPI_HOST IP to connect to the same bus as other SPI controllers without
                    interference.''',
           resval: "0x0"
@@ -200,7 +200,7 @@
         },
         { bits: "25",
           name: "RXFULL",
-          desc: '''When high, indicates that the receive fifo is full.  Any
+          desc: '''When high, indicates that the receive fifo is full. Any
                    ongoing transactions will stall until firmware reads some
                    data from !!RXDATA.'''
           resval: "0x0"
@@ -238,14 +238,14 @@
         { bits: "15:8",
           name: "RXQD",
           desc: '''Receive queue depth. Indicates how many unread 32-bit words are
-                   currently in the RX FIFO.  When active, this result may an
+                   currently in the RX FIFO. When active, this result may an
                    underestimate due to synchronization delays.''',
           resval: "0x0"
         },
         { bits: "7:0",
           name: "TXQD",
           desc: '''Transmit queue depth. Indicates how many unsent 32-bit words
-                   are currently in the TX FIFO.  When active, this result may
+                   are currently in the TX FIFO. When active, this result may
                    be an overestimate due to synchronization delays,
                 ''',
           resval: "0x0"
@@ -267,8 +267,8 @@
         fields: [
           { bits: "31",
             name: "CPOL",
-            desc: '''The polarity of the sck clock signal.  When CPOL is 0,
-                     sck is low when idle, and emits high pulses.   When CPOL
+            desc: '''The polarity of the sck clock signal. When CPOL is 0,
+                     sck is low when idle, and emits high pulses. When CPOL
                      is 1, sck is high when idle, and emits a series of low
                      pulses.
                      '''
@@ -278,38 +278,38 @@
             name: "CPHA",
             desc: '''The phase of the sck clock signal relative to the data. When
                      CPHA = 0, the data changes on the trailing edge of sck
-                     and is typically sampled on the leading edge.  Conversely
+                     and is typically sampled on the leading edge. Conversely
                      if CPHA = 1 high, data lines change on the leading edge of
                      sck and are typically sampled on the trailing edge.
                      CPHA should be chosen to match the phase of the selected
-                     device.  The sampling behavior is modified by the
+                     device. The sampling behavior is modified by the
                      !!CONFIGOPTS.FULLCYC bit.
                      ''',
             resval: "0x0"
           },
           { bits: "29",
             name: "FULLCYC",
-            desc: '''Full cycle.  Modifies the CPHA sampling behaviour to allow
-                     for longer device logic setup times.  Rather than sampling the SD
+            desc: '''Full cycle. Modifies the CPHA sampling behaviour to allow
+                     for longer device logic setup times. Rather than sampling the SD
                      bus a half cycle after shifting out data, the data is sampled
-                     a full cycle after shifting data out.  This means that if
+                     a full cycle after shifting data out. This means that if
                      CPHA = 0, data is shifted out on the trailing edge, and
-                     sampled a full cycle later.  If CPHA = 1, data is shifted and
+                     sampled a full cycle later. If CPHA = 1, data is shifted and
                      sampled with the trailing edge, also separated by a
                      full cycle.''',
             resval: 0
           },
           { bits: "27:24",
             name: "CSNLEAD",
-            desc: '''CS_N Leading Time.  Indicates the number of half sck cycles,
+            desc: '''CS_N Leading Time. Indicates the number of half sck cycles,
                      CSNLEAD+1, to leave between the falling edge of cs_n and
-                     the first edge of sck.  Setting this register to zero
+                     the first edge of sck. Setting this register to zero
                      corresponds to the minimum delay of one-half sck cycle'''
             resval: 0
           },
           { bits: "23:20",
             name: "CSNTRAIL"
-            desc: '''CS_N Trailing Time.  Indicates the number of half sck cycles,
+            desc: '''CS_N Trailing Time. Indicates the number of half sck cycles,
                      CSNTRAIL+1, to leave between last edge of sck and the rising
                      edge of cs_n. Setting this register to zero corresponds
                      to the minimum delay of one-half sck cycle.'''
@@ -325,8 +325,8 @@
           },
           { bits: "15:0",
             name: "CLKDIV",
-            desc: '''Core clock divider.  Slows down subsequent SPI transactions by a
-                     factor of (CLKDIV+1) relative to the core clock frequency.  The
+            desc: '''Core clock divider. Slows down subsequent SPI transactions by a
+                     factor of (CLKDIV+1) relative to the core clock frequency. The
                      period of sck, T(sck) then becomes `2*(CLK_DIV+1)*T(core)`'''
             resval: 0
           },
@@ -336,8 +336,8 @@
     { name: "CSID",
       desc: '''Chip-Select ID
 
-               Controls which device to target with the next command.  This register
-               is passed to the core whenever !!COMMAND is written.  The core then
+               Controls which device to target with the next command. This register
+               is passed to the core whenever !!COMMAND is written. The core then
                asserts cio_csb_o[!!CSID] during the execution of the command.''',
       swaccess: "rw",
       hwaccess: "hro",
@@ -352,7 +352,7 @@
     { name: "COMMAND",
       desc: '''Command Register
 
-               Parameters specific to each command segment.  Unlike the !!CONFIGOPTS multi-register,
+               Parameters specific to each command segment. Unlike the !!CONFIGOPTS multi-register,
                there is only one command register for controlling all attached SPI devices''',
       swaccess: "wo",
       hwaccess: "hro",
@@ -374,11 +374,11 @@
         },
         { bits: "9",
           name: "CSAAT",
-          desc: '''Chip select active after transaction.  If CSAAT = 0, the
+          desc: '''Chip select active after transaction. If CSAAT = 0, the
                    chip select line is raised immediately at the end of the
-                   command segment.   If !!COMMAND.CSAAT = 1, the chip select
+                   command segment. If !!COMMAND.CSAAT = 1, the chip select
                    line is left low at the end of the current transaction
-                   segment.  This allows the creation longer, more
+                   segment. This allows the creation longer, more
                    complete SPI transactions, consisting of several separate
                    segments for issuing instructions, pausing for dummy cycles,
                    and transmitting or receiving data from the device.''',
@@ -390,7 +390,7 @@
 
                    For read or write segments, this field controls the
                    number of 1-byte bursts to transmit and or receive in
-                   this command segment.  The number of cyles required
+                   this command segment. The number of cyles required
                    to send or received a byte will depend on !!COMMAND.SPEED.
                    For dummy segments, (!!COMMAND.DIRECTION == 0), this register
                    controls the number of dummy cycles to issue.
@@ -447,7 +447,7 @@
                  For some processor architectures, this could lead to shuffling
                  of flash data as compared to how it is written in memory.
                  In which case, choosing ByteOrder = 1 can reverse the
-                 byte-order of multi-byte data writes.  (Though within
+                 byte-order of multi-byte data writes. (Though within
                  each byte the most significant bit is always sent first.)
                  '''
         swaccess: "wo",
@@ -564,7 +564,7 @@
         { bits: "3",
           name: "TXWM",
           desc: '''Assert to send a spi_event interrupt whenever the number of 32-bit words in
-                   the TX FIFO is less than !!CONTROL.TX_WATERMARK.  To prevent the
+                   the TX FIFO is less than !!CONTROL.TX_WATERMARK. To prevent the
                    reassertion of this interrupt add more data to the TX FIFO, or
                    reduce !!CONTROL.TX_WATERMARK.''',
           resval: "0x0"
