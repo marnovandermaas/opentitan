@@ -2,27 +2,26 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 {
-    name: "pwm"
-    import_testplans: ["hw/dv/tools/dvsim/testplans/csr_testplan.hjson",
-                       "hw/dv/tools/dvsim/testplans/alert_test_testplan.hjson",
-                       "hw/dv/tools/dvsim/testplans/intr_test_testplan.hjson",
-                       "hw/dv/tools/dvsim/testplans/tl_device_access_types_testplan.hjson",
-                       "pwm_sec_cm_testplan.hjson"],
-    testpoints: [
-        {
-            name: smoke
-            desc: '''
-            pwm_smoke tests pulse and blink mode for a single channel
+  name: "pwm"
+  import_testplans: ["hw/dv/tools/dvsim/testplans/csr_testplan.hjson",
+                     "hw/dv/tools/dvsim/testplans/alert_test_testplan.hjson",
+                     "hw/dv/tools/dvsim/testplans/intr_test_testplan.hjson",
+                     "hw/dv/tools/dvsim/testplans/tl_device_access_types_testplan.hjson",
+                     "pwm_sec_cm_testplan.hjson"],
+  testpoints: [
+    {
+      name: smoke
+      desc: '''
+      pwm_smoke tests pulse and blink mode for a single channel
 
-            Stimulus:
-              - configure the envionment for one PWM channel
-              - program the duty cycle a and b values
-              - configure  the ClkDiv and Resn
+      Stimulus:
+        - configure the envionment for one PWM channel
+        - program the duty cycle a and b values
+        - configure  the ClkDiv and Resn
 
-            Checking:
-              - ensure pulses are generated correctly in pulse or blink mode
-
-            '''
+      Checking:
+        - ensure pulses are generated correctly in pulse or blink mode
+      '''
       stage: V1
       tests: ["pwm_smoke"]
     }
@@ -30,7 +29,6 @@
       name: dutycycle
       desc: '''
             Verify different duty cycle settings in Pulse, Blink and Heart Beat mode.
-
             '''
       stage: V2
       tests: ["pwm_rand_output"]
@@ -140,15 +138,15 @@
     }
   ]
 
- covergroups: [
+  covergroups: [
     {
-     name: regwen_cg
+      name: regwen_cg
       desc: '''
             Covers that an attempt to write wen REG enable was made and was unsuccessful
             '''
     }
     {
-     name: cfg_cg
+      name: cfg_cg
       desc: '''
             Covers that valid settings for the PWM.CFG register has been tested.
             This includes values for:
@@ -158,7 +156,7 @@
             '''
     }
     {
-     name: pwm_en_cg
+      name: pwm_en_cg
       desc: '''
             Covers that both runs with a single PWM channel and multiple channels has been tested.
             Verifies both when the channels are enabled for parallel behavior (activated at the same time)
@@ -166,14 +164,14 @@
             '''
     }
     {
-     name: invert_cg
+      name: invert_cg
       desc: '''
             Covers that channels have been tested with different polarity
             Also cover that a mix channels with invert enabled and disabled concurrently have been tested.
                 '''
     }
     {
-     name: pwm_param_cg
+      name: pwm_param_cg
       desc: '''
             Covers that both pulse, blink and heart beat mode have been tested.
             Also covers that.
@@ -182,7 +180,7 @@
             '''
     }
     {
-     name: duty_cycle_cg
+      name: duty_cycle_cg
       desc: '''
             Covers that a good range of combinations of values for A and B have been send.
             Also cover that multiple channels can run concurrently with different settings for A and B.
@@ -193,26 +191,26 @@
             '''
     }
     {
-     name: blink_param_cg
+      name: blink_param_cg
       desc: '''
             Covers that a good range of combinations of values for X and Y have been seend.
             Also cover that multiple channels can run concurrently with different settings for X and Y.
             '''
     }
     {
-     name: lowpower_cg
+      name: lowpower_cg
       desc: '''
             Covers that the DUT will continue to produce pulses with TL clock disabled (low power mode)
             '''
     }
     {
-     name: clock_cg
+      name: clock_cg
       desc: '''
             Cover that a range of frequencies have been tested for the PWM clock including a clock that matches the TL clk.
             '''
     }
     {
-     name: overwrite_conf_cg
+      name: overwrite_conf_cg
       desc: '''
             Cover that a the PWM configuration cannot be altered while a channel is active
             '''
