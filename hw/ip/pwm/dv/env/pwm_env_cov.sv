@@ -17,7 +17,7 @@ class pwm_env_cov extends cip_base_env_cov #(.CFG_T(pwm_env_cfg));
   // covergroups
 
   covergroup cfg_cg with function sample(bit [26:0] clkdiv,
-                                        bit [3:0]  dcresn,
+                                         bit [3:0]  dcresn,
                                          bit        cntren);
     clkdiv_cp: coverpoint clkdiv {
       bins minimum_value  = {0};
