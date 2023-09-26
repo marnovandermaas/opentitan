@@ -133,6 +133,91 @@
             ''',
     }
   ],
+  features: [
+    {
+      name: "ENTROPY_SRC.RNG_BIT_ENABLE"
+      desc: '''
+            Optionally select a single channel (out of four) of the digital noise source only.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.MODE.EDN"
+      desc: '''
+            The normal use of entropy source is to provide entropy to the rest of hardware through the entropy distribution network (EDN), sometimes via the CSRNG.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.MODE.ROUTE_TO_FIRMWARE"
+      desc: '''
+            For validation testing only, no entropy forwarded to hardware modules, but instead to the firmware.
+
+            This feature can be used or bypass the conditioner.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.MODE.BYPASS"
+      desc: '''
+            In boot-time / bypass mode,...
+
+            This mode bypasses the hardware conditioning of the block and will instead output raw entropy.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.MODE.FIPS"
+      desc: '''
+            In FIPS/CC compliant mode,...
+
+            can generate FIPS/CC compliant entropy, but not always
+
+            Prerequisites
+            - conditioning
+            - all four channels
+
+            Signal to AST and to CSRNG / EDN
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.HEALTH_TESTS"
+      desc: '''
+            To screen the raw noise bits provided by the digital noise source / physical true random number generator (PTRNG) for statistical defects, ENTROPY_SRC implements multiple health tests which include:
+            - Repetition Count and Adaptive Proportion tests as recommended by NIST SP 800-90B.
+            - Bucket and Markov tests to look for correlations between the individual noise channels.
+
+            Firmware can configure the threshold values separately for each health test.
+            In case of health test failures, an interrupt is signaled.
+            In addition, per-health-test failure counters are incremented.
+
+            Firmware can configure threshold values for these per-health-test counters as well as for the total failure counter.
+            In case any of these thresholds are hit, ENTROPY_SRC halts, signals a recoverable alert and sets the !!RECOV_ALERT_STS.ES_MAIN_SM_ALERT bit.
+            Firmware then has to disable and re-enable ENTROPY_SRC to continue entropy generation and health testing.
+
+            Firmware can configure the window size for the health tests.
+            Note that currently, only a window size of 384 is supported and tested for boot-time / bypass mode.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.HEALTH_TESTS_EXT"
+      desc: '''
+            In addition to the internal health tests, ENTROPY_SRC features an interface for vendor-defined health tests implemented externally to ENTROPY_SRC.
+
+            Note: Earl Grey does not implement external vendor-defined health tests.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.FW_OV.OBSERVE"
+      desc: '''
+            If this is enabled, firmware can monitor the post-health test entropy.
+            This can only be done if the otp_en_entropy_src_fw_over fuse has not been blown.
+            '''
+    },
+    {
+      name: "ENTROPY_SRC.FW_OV.EXTRACT_AND_INSERT"
+      desc: '''
+            If enabled, this allows firmware to extract entropy bits and insert entropy bits into the entropy flow.
+            This is useful for performing additional health tests and/or firmware-based conditioning.
+            '''
+    }
+  ],
   countermeasures: [
     { name: "CONFIG.REGWEN"
       desc: "Registers are protected from writes."
