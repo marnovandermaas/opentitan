@@ -16,8 +16,11 @@
               the AST RNG interface.
             - Verify the correctness of the received data with assertion based connectivity checks.
             '''
+      features: ["ENTROPY_SRC.MODE.ROUTE_TO_FIRMWARE"]
       stage: V2
+      si_stage: SV2
       tests: ["chip_sw_entropy_src_ast_rng_req"]
+      bazel: []
     },
     {
       name: chip_sw_entropy_src_csrng
@@ -36,8 +39,11 @@
             - Issue instantiate and reseed commands from edn0 and edn1. Check that for each
               command, there is a corresponding entropy request interrupt.
             '''
+      features: ["ENTROPY_SRC.MODE.EDN"]
       stage: V2
+      si_stage: SV3
       tests: ["chip_sw_entropy_src_csrng"]
+      bazel: []
     },
     {
       name: chip_sw_entropy_src_fuse_en_fw_read
@@ -52,7 +58,9 @@
             - Read the internal state via SW and verify that the entropy valid bit is zero.
             '''
       stage: V2
+      si_stage: None
       tests: ["chip_sw_entropy_src_fuse_en_fw_read_test"]
+      bazel: []
     },
     {
       name: chip_sw_entropy_src_known_answer_tests
@@ -61,9 +69,36 @@
             - Configure the device in firmware-bypass mode.
             - Feed NIST test-defined entropy sequences into the conditioner
             - Read the entropy_data_fifo via SW; verify that it reads the expected values.
+
+            Notes for silicon targets:
+            - This test requires access to firmware bypass mode, which is gated by OTP.
+              This test should thus be done in a secure facility.
             '''
+      features: [
+        "ENTROPY_SRC.MODE.ROUTE_TO_FIRMWARE",
+        "ENTROPY_SRC.FW_OV.OBSERVE",
+        "ENTROPY_SRC.FW_OV.EXTRACT_AND_INSERT"
+      ]
       stage: V2
+      si_stage: SV3
       tests: ["chip_sw_entropy_src_kat_test"]
+      bazel: []
     },
+    {
+      name: chip_sw_entropy_src_fips_health_check
+      desc: '''
+            Check that the entropy source can generate FIPS quality true random numbers.
+
+            This includes setting up the health checks within the entropy source, for example: repitition count, adaptive proportion test, Bucket and Markov tests.
+            '''
+      features: [
+        "ENTROPY_SRC.HEALTH_TESTS",
+        "ENTROPY_SRC.MODE.FIPS"
+      ]
+      stage: V3
+      si_stage: SV3
+      tests: []
+      bazel: []
+    }
   ]
 }
