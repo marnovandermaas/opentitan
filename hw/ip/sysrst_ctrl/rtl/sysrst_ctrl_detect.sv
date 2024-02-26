@@ -83,22 +83,26 @@ module sysrst_ctrl_detect
   // Timer Logic //
   /////////////////
 
-  // Take the maximum width of both timer values.
-  localparam int unsigned TimerWidth =
-      (DetectTimerWidth > DebounceTimerWidth) ? DetectTimerWidth : DebounceTimerWidth;
+  // Take the maximum of both widths and add 1 because we need to add the two
+  // together.
+  localparam int unsigned TimerWidth = (DetectTimerWidth > DebounceTimerWidth) ?
+                                       DetectTimerWidth + 1 :
+                                       DebounceTimerWidth + 1;
 
   logic cnt_en, cnt_clr;
   logic [TimerWidth-1:0] cnt_d, cnt_q;
   assign cnt_d = (cnt_clr) ? '0           :
-                 (cnt_en)  ? cnt_q + 1'b1 :
+                 (cnt_inc) ? cnt_q + 1'b1 :
+                 (cnt_dec) ? cnt_q - 1'b1 :
                              cnt_q;
 
 
   logic cnt_done, thresh_sel;
   logic [TimerWidth-1:0] thresh;
   assign thresh = (thresh_sel) ? TimerWidth'(cfg_detect_timer_i) :
-                                 TimerWidth'(cfg_debounce_timer_i);
+                                 TimerWidth'(cfg_debounce_timer_i + cfg_detect_timer_i);
   assign cnt_done = (cnt_q >= thresh);
+  assign cnt_zero = (cnt_q == '0);
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_cnt_reg
     if (!rst_ni) begin
@@ -126,7 +130,8 @@ module sysrst_ctrl_detect
 
     // Counter controls (clear has priority).
     cnt_clr = 1'b0;
-    cnt_en = 1'b0;
+    cnt_inc = 1'b0;
+    cnt_dec = 1'b0;
 
     // Detected outputs
     event_detected_o = 1'b0;
@@ -157,17 +162,26 @@ module sysrst_ctrl_detect
       // correct level. If so, we move on to the
       // detection stage, otherwise we fall back.
       DebounceSt: begin
-        cnt_en = 1'b1;
         // Unconditionally go back to idle if the detector is disabled.
         if (!cfg_enable_i) begin
           state_d = IdleSt;
           cnt_clr = 1'b1;
-        end else if (cnt_done) begin
-          cnt_clr = 1'b1;
-          if (trigger_active) begin
+        end else begin
+          if (cnt_done) begin
+            // Do not clear timer because detect state builds on top of the
+            // debounce counter.
             state_d = DetectSt;
+          end else if (trigger_active) begin
+            // Stay in debounce state.
+            cnt_inc = 1'b1;
           end else begin
-            state_d = IdleSt;
+            if (cnt_zero) begin
+              cnt_clr = 1'b1;
+              state_d = IdleSt;
+            end else begin
+              // Stay in debounce state.
+              cnt_dec = 1'b1;
+            end
           end
         end
       end
@@ -179,19 +193,29 @@ module sysrst_ctrl_detect
       // back to idle.
       DetectSt: begin
         thresh_sel = 1'b1;
-        cnt_en = 1'b1;
         // Go back to idle if either the trigger level is not active anymore, or if the
         // detector is disabled.
-        if (!cfg_enable_i || !trigger_active) begin
+        if (!cfg_enable_i) begin
           state_d = IdleSt;
           cnt_clr = 1'b1;
-        // If the trigger is active, count up.
-        end else begin
+        end else if (trigger_active) begin
+          // If the trigger is active, count up.
           if (cnt_done) begin
             state_d = StableSt;
             cnt_clr = 1'b1;
             event_detected_o = 1'b1;
             event_detected_pulse_o = 1'b1;
+          end else begin
+            // Stay in detect state.
+            cnt_inc = 1'b1;
+          end
+        end else begin
+          if (cnt_zero) begin
+            state_d = IdleSt;
+            cnt_clr = 1'b1;
+          end else begin
+            // Stay in detect state.
+            cnt_dec = 1'b1;
           end
         end
       end
@@ -204,9 +228,26 @@ module sysrst_ctrl_detect
         // to go back to the idle state.
         if (!cfg_enable_i || (!trigger_active && !Sticky)) begin
           state_d = IdleSt;
-        // Otherwise keep the event detected output signal high.
+          cnt_clr = 1'b1;
         end else begin
+          // Otherwise keep the event detected output signal high.
           event_detected_o = 1'b1;
+          if (!Sticky) begin
+            if (trigger_active) begin
+              // Stay in stable state.
+              if (!cnt_done) begin
+                cnt_inc = 1'b1;
+              end
+            end else begin
+              if (cnt_zero) begin
+                state_d = IdleSt;
+                cnt_clr = 1'b1;
+                event_detected_o = 1'b0;
+              end else begin
+                // Stay in stable state.
+                cnt_dec = 1'b1;
+              end
+          end
         end
       end
       ////////////////////////////////////////////
