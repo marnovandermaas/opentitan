@@ -36,17 +36,17 @@ module i2c_fsm import i2c_pkg::*;
   output logic       rx_fifo_wvalid_o, // high if there is valid data in rx_fifo
   output logic [7:0] rx_fifo_wdata_o,  // byte in rx_fifo read from target
 
-  input        tx_fifo_rvalid_i, // indicates there is valid data in tx_fifo
-  input        tx_fifo_wvalid_i, // indicates data is being put into tx_fifo
-  input [FifoDepthWidth-1:0]  tx_fifo_depth_i,  // tx_fifo_depth
-  output logic tx_fifo_rready_o, // pop entry from tx_fifo
-  input [7:0]  tx_fifo_rdata_i,  // byte in tx_fifo to be sent to host
+  input                      tx_fifo_rvalid_i, // indicates there is valid data in tx_fifo
+  input                      tx_fifo_wvalid_i, // indicates data is being put into tx_fifo
+  input [FifoDepthWidth-1:0] tx_fifo_depth_i,  // fill level of tx_fifo
+  output logic               tx_fifo_rready_o, // pop entry from tx_fifo
+  input [7:0]                tx_fifo_rdata_i,  // byte in tx_fifo to be sent to host
 
-  output logic       acq_fifo_wvalid_o, // high if there is valid data in acq_fifo
-  output logic [9:0] acq_fifo_wdata_o,  // byte and signal in acq_fifo read from target
-  input [AcqFifoDepthWidth-1:0] acq_fifo_depth_i,
-  output logic       acq_fifo_wready_o, // local version of ready
-  input [9:0]        acq_fifo_rdata_i,  // only used for assertion
+  output logic                    acq_fifo_wvalid_o, // high if there is valid data in acq_fifo
+  output logic [9:0]              acq_fifo_wdata_o,  // byte and signal in acq_fifo read from target
+  input [AcqFifoDepthWidth-1:0]   acq_fifo_depth_i,  // fill level of acq_fifo
+  output logic                    acq_fifo_wready_o, // local version of ready
+  input [9:0]                     acq_fifo_rdata_i,  // only used for assertion
 
   output logic       host_idle_o,      // indicates the host is idle
   output logic       target_idle_o,    // indicates the target is idle
