@@ -678,7 +678,7 @@ module i2c_fsm import i2c_pkg::*;
         end
       end
       // TransmitWait: Check if data is available prior to transmit
-      TransmitWait: begin
+      TransmitWait : begin
         target_idle_o = 1'b0;
       end
       // TransmitSetup: target shifts indexed bit onto SDA while SCL is low
@@ -759,7 +759,7 @@ module i2c_fsm import i2c_pkg::*;
         scl_d = 1'b0;
       end
       // StretchTxSetup: drive the return data
-      StretchTxSetup: begin
+      StretchTxSetup : begin
         target_idle_o = 1'b0;
         scl_d = 1'b0;
         sda_d = tx_fifo_rdata[3'(bit_idx)];
@@ -1132,7 +1132,7 @@ module i2c_fsm import i2c_pkg::*;
         end
       end
       // TransmitWait: Evaluate whether there are entries to send first
-      TransmitWait: begin
+      TransmitWait : begin
         if (stretch_tx) begin
           state_d = StretchTx;
         end else begin
