@@ -673,8 +673,9 @@ module i2c_fsm import i2c_pkg::*;
 
         // Upon transition to next state, populate the acquisition fifo
         if (tcount_q == 20'd1) begin
-          // only write to fifo if stretching conditions are not met
-          acq_fifo_wvalid_o = ~stretch_addr;
+          // There should be space in the ACQ FIFO because stretching happened
+          // before sending the ACK.
+          acq_fifo_wvalid_o = 1'b1;
           acq_fifo_wdata_o = {AcqStart, input_byte};
         end
       end
@@ -742,7 +743,9 @@ module i2c_fsm import i2c_pkg::*;
         sda_d = 1'b0;
 
         if (tcount_q == 20'd1) begin
-          acq_fifo_wvalid_o = ~stretch_rx;          // assert that acq_fifo has space
+          // ACQ FIFO should have space because stretching happened before
+          // sending ACK.
+          acq_fifo_wvalid_o = 1'b1;                 // write to acq_fifo
           acq_fifo_wdata_o = {AcqData, input_byte}; // transfer data to acq_fifo
         end
       end
@@ -751,9 +754,6 @@ module i2c_fsm import i2c_pkg::*;
       StretchAddr : begin
         target_idle_o = 1'b0;
         scl_d = 1'b0;
-
-        acq_fifo_wvalid_o = ~stretch_addr;
-        acq_fifo_wdata_o = {AcqStart, input_byte};
       end
       // StretchTx: target stretches the clock when tx_fifo is empty
       StretchTx : begin
@@ -770,10 +770,6 @@ module i2c_fsm import i2c_pkg::*;
       StretchAcqFull : begin
         target_idle_o = 1'b0;
         scl_d = 1'b0;
-
-        // When space becomes available, deposit entry
-        acq_fifo_wvalid_o = ~stretch_rx;          // assert that acq_fifo has space
-        acq_fifo_wdata_o = {AcqData, input_byte}; // transfer data to acq_fifo
       end
       // default
       default : begin
@@ -1094,9 +1090,16 @@ module i2c_fsm import i2c_pkg::*;
       // AddrRead: read and compare target address
       AddrRead : begin
         if (bit_ack && address_match) begin
-          state_d = AddrAckWait;
-          load_tcount = 1'b1;
-          tcount_sel = tClockStart;
+          // Check whether there is enough space in the ACQ FIFO, otherwise
+          // stretch the clock. We are stretching before sending an ACK so
+          // that we can send a NACK if the stretching takes too long.
+          if (stretch_addr) begin
+            state_d = StretchAddr;
+          end else begin
+            state_d = AddrAckWait;
+            load_tcount = 1'b1;
+            tcount_sel = tClockStart;
+          end
         end else if (bit_ack && !address_match) begin
           state_d = Idle;
         end
@@ -1122,12 +1125,8 @@ module i2c_fsm import i2c_pkg::*;
       // AddrAckHold: target pulls SDA low while SCL is pulled low
       AddrAckHold : begin
         if (tcount_q == 20'd1) begin
-          // Stretch when requested by software or when there is insufficient
-          // space to hold the start / address format byte.
-          // If there is sufficient space, the format byte is written into the acquisition fifo.
-          if (stretch_addr) begin
-            state_d = StretchAddr;
-          end else if (rw_bit_q) begin
+          // Check whether it is a write or read.
+          if (rw_bit_q) begin
             state_d = TransmitWait;
           end else if (!rw_bit_q) begin
             state_d = AcquireByte;
@@ -1196,9 +1195,13 @@ module i2c_fsm import i2c_pkg::*;
       // AcquireByte: target acquires a byte
       AcquireByte : begin
         if (bit_ack) begin
-          state_d = AcquireAckWait;
-          load_tcount = 1'b1;
-          tcount_sel = tClockStart;
+          if (stretch_rx) begin
+            state_d = StretchAcqFull;
+          end else begin
+            state_d = AcquireAckWait;
+            load_tcount = 1'b1;
+            tcount_sel = tClockStart;
+          end
         end
       end
       // AcquireAckWait: pause before acknowledging
@@ -1222,21 +1225,17 @@ module i2c_fsm import i2c_pkg::*;
       // AcquireAckHold: target pulls SDA low while SCL is pulled low
       AcquireAckHold : begin
         if (tcount_q == 20'd1) begin
-          // If there is no space for the current entry, stretch clocks and
-          // wait for software to make space.
-          state_d = stretch_rx ? StretchAcqFull : AcquireByte;
+          state_d = AcquireByte;
         end
       end
       // StretchAddr: The address phase can not yet be completed, stretch
       // clock and wait.
       StretchAddr : begin
         if (!stretch_addr) begin
-          // When transmitting after an address stretch, we need to assume
-          // that is looks like a Tx stretch.  This is because if we try
-          // to follow the normal path, the logic will release the clock
-          // too early relative to driving the data.  This will cause a
-          // setup violation.  This is the same case to needing StretchTxSetup.
-          state_d = rw_bit_q ? StretchTx : AcquireByte;
+          // When done stretching send an ACK.
+          state_d = AddrAckWait;
+          load_tcount = 1'b1;
+          tcount_sel = tClockStart;
         end
       end
       // StretchTx: target stretches the clock when tx conditions are not satisfied.
@@ -1268,7 +1267,11 @@ module i2c_fsm import i2c_pkg::*;
       // When space becomes available, deposit the entry into the acqusition fifo
       // and move on to receive the next byte.
       StretchAcqFull : begin
-        if (~stretch_rx) state_d = AcquireByte;
+        if (!stretch_rx) begin
+          state_d = AcquireAckWait;
+          load_tcount = 1'b1;
+          tcount_sel = tClockStart;
+        end
       end
       // default
       default : begin
@@ -1355,5 +1358,11 @@ module i2c_fsm import i2c_pkg::*;
 
   // Check that we don't change SCL and SDA in the same clock cycle in host mode.
   `ASSERT(SclSdaChangeNotSimultaneous_A, !(host_enable_i && (scl_d != scl_q) && (sda_d != sda_q)))
+
+  // Check that ACQ FIFO has space when being written to.
+  `ASSERT(AcqFifoSpaceOnAddrWrite_A, state_q == AddrAckHold    && tcount_q == 20'd1 |->
+          !stretch_addr)
+  `ASSERT(AcqFifoSpaceOnDataWrite_A, state_q == AcquireAckHold && tcount_q == 20'd1 |->
+          !stretch_rx)
 
 endmodule
