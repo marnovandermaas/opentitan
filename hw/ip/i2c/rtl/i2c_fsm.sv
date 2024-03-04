@@ -802,8 +802,8 @@ module i2c_fsm import i2c_pkg::*;
     end
   end
 
-  assign stretch_addr = !acq_fifo_wready;
   assign stretch_rx   = !acq_fifo_wready;
+  assign stretch_addr = stretch_rx;
 
   // Stretch Tx phase when:
   // 1. When there is no data to return to host
