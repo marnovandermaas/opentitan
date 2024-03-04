@@ -1360,7 +1360,7 @@ module i2c_fsm import i2c_pkg::*;
   `ASSERT(SclSdaChangeNotSimultaneous_A, !(host_enable_i && (scl_d != scl_q) && (sda_d != sda_q)))
 
   // Check that ACQ FIFO has space when being written to.
-  `ASSERT(AcqFifoSpaceWhenWritten_A, state_q == AddrAckHold    && tcount_q == 20'd1 |-> !stretch_addr)
-  `ASSERT(AcqFifoSpaceWhenWritten_A, state_q == AcquireAckHold && tcount_q == 20'd1 |-> !stretch_rx)
+  `ASSERT(AcqFifoSpaceOnAddrWrite_A, state_q == AddrAckHold    && tcount_q == 20'd1 |-> !stretch_addr)
+  `ASSERT(AcqFifoSpaceOnDataWrite_A, state_q == AcquireAckHold && tcount_q == 20'd1 |-> !stretch_rx)
 
 endmodule
