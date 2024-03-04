@@ -654,5 +654,18 @@
         { bits: "31:0" }
       ]
     }
+    { name: "TARGET_TIMEOUT_CTRL"
+      desc: '''
+            I2C target timeout for how long to stretch before giving up and sending a NACK (in units of input clock frequency).
+            When set to the maximum value the timeout is disabled and the target will stretch until the ACQ FIFO has space again.
+            '''
+      swaccess: "rw"
+      hwaccess: "hro"
+      fields: [
+        { bits: "31:0",
+          resval: "0xFFFFFFFF"
+        }
+      ]
+    }
   ]
 }
