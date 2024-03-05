@@ -345,9 +345,13 @@ module i2c_fsm import i2c_pkg::*;
   // space for this entry, the target module would need to stretch the
   // repeat start / stop indication.  If a system does not support stretching,
   // there's no good way for a stop to be NACK'd.
+  // Besides the space necessary for the stop format byte, we also need one
+  // space to send a NACK. This means that we can notify software that a NACK
+  // has happened while still keeping space for a subsequent stop or repeated
+  // start.
   logic [AcqFifoDepthWidth-1:0] acq_fifo_remainder;
   assign acq_fifo_remainder = AcqFifoDepth - acq_fifo_depth_i;
-  assign acq_fifo_wready = acq_fifo_remainder > AcqFifoDepthWidth'(1'b1);
+  assign acq_fifo_wready = acq_fifo_remainder > AcqFifoDepthWidth'(2);
 
   // State definitions
   typedef enum logic [5:0] {
@@ -1364,5 +1368,9 @@ module i2c_fsm import i2c_pkg::*;
           !stretch_addr)
   `ASSERT(AcqFifoSpaceOnDataWrite_A, state_q == AcquireAckHold && tcount_q == 20'd1 |->
           !stretch_rx)
+
+  // Check that ACQ FIFO is deep enough to support a stop/rstart as well as
+  // a nack when it is full.
+  `ASSERT(AcqFifoDeepEnough_A, AcqFifoDepth > 2)
 
 endmodule
