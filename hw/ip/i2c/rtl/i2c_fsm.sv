@@ -95,6 +95,10 @@ module i2c_fsm import i2c_pkg::*;
   logic        stretch_en;
   logic        actively_stretching; // Only high when this target is holding SCL low to stretch.
 
+  logic        nack_next_byte_q;     // Flop whether the next byte needs to be nack'ed.
+  logic        set_nack_next_byte;   // Set the nack next byte flag.
+  logic        clear_nack_next_byte; // Clear the nack next byte flag.
+
   // Bit and byte counter variables
   logic [2:0]  bit_index;     // bit being transmitted to or read from the bus
   logic        bit_decr;      // indicates bit_index must be decremented by 1
@@ -223,6 +227,19 @@ module i2c_fsm import i2c_pkg::*;
       stretch_active_cnt <= stretch_active_cnt + 1'b1;
     end else begin
       stretch_active_cnt <= '0;
+    end
+  end
+
+  // Latch the nack next byte value when we receive an address to write to but
+  // there is no space in the ACQ FIFO. The address is still ack'ed to be
+  // compatible with the
+  always_ff @ (posedge clk_i or negedge rst_ni) begin : clk_nack_next_byte
+    if (!rst_ni) begin
+      nack_next_byte_q <= 1'b0;
+    end else if (set_nack_next_byte) begin
+      nack_next_byte_q <= 1'b1;
+    end else if (clear_nack_next_byte) begin
+      nack_next_byte_q <= 1'b0;
     end
   end
 
@@ -699,10 +716,16 @@ module i2c_fsm import i2c_pkg::*;
 
         // Upon transition to next state, populate the acquisition fifo
         if (tcount_q == 20'd1) begin
-          // There should be space in the ACQ FIFO because stretching happened
-          // before sending the ACK.
           acq_fifo_wvalid_o = 1'b1;
-          acq_fifo_wdata_o = {AcqStart, input_byte};
+          if (nack_next_byte_q) begin
+            // If we're here because the ACQ FIFO is nearly full but we need
+            // to acknowlegde our address because this is a write, then
+            // record this.
+            acq_fifo_wdata_o = {AcqNackStart, input_byte};
+          end else begin
+            // Continue as normal
+            acq_fifo_wdata_o = {AcqStart, input_byte};
+          end
         end
       end
       // TransmitWait: Check if data is available prior to transmit
@@ -894,7 +917,8 @@ module i2c_fsm import i2c_pkg::*;
     input_byte_clr = 1'b0;
     en_sda_interf_det = 1'b0;
     event_tx_stretch_o = 1'b0;
-
+    set_nack_next_byte = 1'b0;
+    clear_nack_next_byte = 1'b0;
     unique case (state_q)
       // Idle: initial state, SDA and SCL are released (high)
       Idle : begin
@@ -902,6 +926,7 @@ module i2c_fsm import i2c_pkg::*;
         else if (host_enable_i) begin
           if (fmt_fifo_rvalid_i) state_d = Active;
         end
+        clear_nack_next_byte = 1'b1;
       end
       // SetupStart: SDA and SCL are released
       SetupStart : begin
@@ -1146,6 +1171,7 @@ module i2c_fsm import i2c_pkg::*;
           state_d = AddrRead;
           input_byte_clr = 1'b1;
         end
+        clear_nack_next_byte = 1'b1;
       end
       // AddrRead: read and compare target address
       AddrRead : begin
@@ -1258,7 +1284,14 @@ module i2c_fsm import i2c_pkg::*;
           if (stretch_rx) begin
             state_d = StretchAcqFull;
           end else begin
-            state_d = AcquireAckWait;
+            if (nack_next_byte_q) begin
+              // This means the ACQ FIFO was already full on the previous
+              // address read. We now must NACK this byte and drop it
+              // completely.
+              state_d = NackWait;
+            end else begin
+              state_d = AcquireAckWait;
+            end
             load_tcount = 1'b1;
             tcount_sel = tClockStart;
           end
@@ -1293,6 +1326,7 @@ module i2c_fsm import i2c_pkg::*;
         if (tcount_q == 20'd1 && !scl_i) begin
           state_d = NackSetup;
         end
+        clear_nack_next_byte = 1'b1;
       end
       // NackSetup: target holds SDA high while SCL is low.
       NackSetup : begin
@@ -1322,7 +1356,17 @@ module i2c_fsm import i2c_pkg::*;
           load_tcount = 1'b1;
           tcount_sel = tClockStart;
         end else if (nack_timeout) begin
-          state_d = NackWait;
+          if (rw_bit_q) begin
+            // If this is a read then there are no more bytes to come from the
+            // host so we must NACK immediately.
+            state_d = NackWait;
+          end else begin
+            // If this is a write then we can NACK the next byte we get from
+            // the host. It is better to ACK the address if this is ours to
+            // be compatible with SMBus.
+            state_d = AddrAckWait;
+            set_nack_next_byte = 1'b1;
+          end
           load_tcount = 1'b1;
           tcount_sel = tClockStart;
         end
