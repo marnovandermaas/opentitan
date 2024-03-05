@@ -8,6 +8,7 @@ module i2c_fsm import i2c_pkg::*;
 #(
   parameter int FifoDepth = 64,
   parameter int AcqFifoDepth = 64,
+  parameter int unsigned AcqFifoWidth = 11,
   localparam int FifoDepthWidth = $clog2(FifoDepth+1),
   localparam int AcqFifoDepthWidth = $clog2(AcqFifoDepth+1)
 ) (
@@ -43,10 +44,10 @@ module i2c_fsm import i2c_pkg::*;
   input [7:0]                tx_fifo_rdata_i,  // byte in tx_fifo to be sent to host
 
   output logic                    acq_fifo_wvalid_o, // high if there is valid data in acq_fifo
-  output logic [9:0]              acq_fifo_wdata_o,  // byte and signal in acq_fifo read from target
+  output logic [AcqFifoWidth-1:0] acq_fifo_wdata_o,  // byte and signal in acq_fifo read from target
   input [AcqFifoDepthWidth-1:0]   acq_fifo_depth_i,  // fill level of acq_fifo
   output logic                    acq_fifo_wready_o, // local version of ready
-  input [9:0]                     acq_fifo_rdata_i,  // only used for assertion
+  input [AcqFifoWidth-1:0]        acq_fifo_rdata_i,  // only used for assertion
 
   output logic       host_idle_o,      // indicates the host is idle
   output logic       target_idle_o,    // indicates the target is idle
@@ -64,6 +65,8 @@ module i2c_fsm import i2c_pkg::*;
   input [30:0] stretch_timeout_i,  // max time target connected to this host may stretch the clock
   input        timeout_enable_i,   // assert if target stretches clock past max
   input [31:0] host_timeout_i,     // max time target waits for host to pull clock down
+  input [30:0] nack_timeout_i,     // max time target may stretch until it should NACK
+  input        nack_timeout_en_i,  // enable nack timeout
 
   input logic [6:0] target_address0_i,
   input logic [6:0] target_mask0_i,
@@ -87,7 +90,10 @@ module i2c_fsm import i2c_pkg::*;
   logic        load_tcount;   // indicates counter must be loaded
   logic [31:0] stretch_idle_cnt; // counter for clock being stretched by target
                                  // or clock idle by host.
+  logic [30:0] stretch_active_cnt; // In target mode keep track of how long it has stretched for
+                                   // the NACK timeout feature.
   logic        stretch_en;
+  logic        actively_stretching; // Only high when this target is holding SCL low to stretch.
 
   // Bit and byte counter variables
   logic [2:0]  bit_index;     // bit being transmitted to or read from the bus
@@ -126,6 +132,7 @@ module i2c_fsm import i2c_pkg::*;
   logic        stretch_addr;
   logic        stretch_rx;
   logic        stretch_tx;
+  logic        nack_timeout;
   logic        expect_stop;
 
   // Target bit counter variables
@@ -204,6 +211,18 @@ module i2c_fsm import i2c_pkg::*;
       stretch_idle_cnt <= stretch_idle_cnt + 1'b1;
     end else begin
       stretch_idle_cnt <= '0;
+    end
+  end
+
+  // Keep track of how long the target has been stretching. This is used to
+  // timeout and send a NACK instead.
+  always_ff @ (posedge clk_i or negedge rst_ni) begin : clk_nack_after_stretch
+    if (!rst_ni) begin
+      stretch_active_cnt <= '0;
+    end else if (actively_stretching) begin
+      stretch_active_cnt <= stretch_active_cnt + 1'b1;
+    end else begin
+      stretch_active_cnt <= '0;
     end
   end
 
@@ -389,6 +408,8 @@ module i2c_fsm import i2c_pkg::*;
     AcquireByte,
     // Target function sends ack to external host
     AcquireAckWait, AcquireAckSetup, AcquireAckPulse, AcquireAckHold,
+    // Target function sends not ackowledge to external host
+    NackWait, NackSetup, NackPulse, NackHold,
     // Target function clock stretch handling.
     StretchAddr,
     StretchTx, StretchTxSetup,
@@ -471,7 +492,7 @@ module i2c_fsm import i2c_pkg::*;
     rx_fifo_wdata_o = 8'h00;
     tx_fifo_rready_o = 1'b0;
     acq_fifo_wvalid_o = 1'b0;
-    acq_fifo_wdata_o = 10'b0;
+    acq_fifo_wdata_o = AcqFifoWidth'(0);
     event_nak_o = 1'b0;
     event_scl_interference_o = 1'b0;
     event_sda_unstable_o = 1'b0;
@@ -479,6 +500,7 @@ module i2c_fsm import i2c_pkg::*;
     rw_bit = rw_bit_q;
     stretch_en = 1'b0;
     expect_stop = 1'b0;
+    actively_stretching = 1'b0;
     unique case (state_q)
       // Idle: initial state, SDA is released (high), SCL is released if the
       // bus is idle. Otherwise, if no STOP condition has been sent yet,
@@ -753,11 +775,39 @@ module i2c_fsm import i2c_pkg::*;
           acq_fifo_wdata_o = {AcqData, input_byte}; // transfer data to acq_fifo
         end
       end
+      // NackWait: pause before not acknowledge.
+      NackWait : begin
+        target_idle_o = 1'b0;
+      end
+      // NackSetup: target holds SDA high while SCL is low.
+      NackSetup : begin
+        target_idle_o = 1'b0;
+        sda_d = 1'b1;
+      end
+      // NackPulse: target holds SDA high while SCL is released.
+      NackPulse : begin
+        target_idle_o = 1'b0;
+        sda_d = 1'b1;
+      end
+      // NackHold: target holds SDA high while SCL is pulled low.
+      NackHold : begin
+        target_idle_o = 1'b0;
+        sda_d = 1'b1;
+
+        if (tcount_q == 20'd1) begin
+          // ACQ FIFO should have space because stretching happens with two
+          // spaces left in the FIFO: One for a stop/restart and the other for
+          // this NACK message.
+          acq_fifo_wvalid_o = 1'b1;                 // Write to acq_fifo.
+          acq_fifo_wdata_o = {AcqNack, input_byte}; // Put NACK into acq_fifo.
+        end
+      end
       // StretchAddr: target stretches the clock if matching address cannot be
       // deposited yet.
       StretchAddr : begin
         target_idle_o = 1'b0;
         scl_d = 1'b0;
+        actively_stretching = 1'b1;
       end
       // StretchTx: target stretches the clock when tx_fifo is empty
       StretchTx : begin
@@ -774,6 +824,7 @@ module i2c_fsm import i2c_pkg::*;
       StretchAcqFull : begin
         target_idle_o = 1'b0;
         scl_d = 1'b0;
+        actively_stretching = 1'b1;
       end
       // default
       default : begin
@@ -786,11 +837,12 @@ module i2c_fsm import i2c_pkg::*;
         rx_fifo_wdata_o = 8'h00;
         tx_fifo_rready_o = 1'b0;
         acq_fifo_wvalid_o = 1'b0;
-        acq_fifo_wdata_o = 10'b0;
+        acq_fifo_wdata_o = AcqFifoWidth'(0);
         event_nak_o = 1'b0;
         event_scl_interference_o = 1'b0;
         event_sda_unstable_o = 1'b0;
         event_cmd_complete_o = 1'b0;
+        actively_stretching = 1'b0;
       end
     endcase // unique case (state_q)
 
@@ -806,6 +858,10 @@ module i2c_fsm import i2c_pkg::*;
 
   assign stretch_rx   = !acq_fifo_wready;
   assign stretch_addr = stretch_rx;
+
+  // This condition determines whether this target has stretched beyond the
+  // timeout in which case it must now send a NACK to the host.
+  assign nack_timeout = nack_timeout_en_i && stretch_active_cnt >= nack_timeout_i;
 
   // Stretch Tx phase when:
   // 1. When there is no data to return to host
@@ -1232,12 +1288,41 @@ module i2c_fsm import i2c_pkg::*;
           state_d = AcquireByte;
         end
       end
+      // NackWait: pause before not acknowledge.
+      NackWait : begin
+        if (tcount_q == 20'd1 && !scl_i) begin
+          state_d = NackSetup;
+        end
+      end
+      // NackSetup: target holds SDA high while SCL is low.
+      NackSetup : begin
+        if (scl_i) state_d = NackPulse;
+      end
+      // NackPulse: target holds SDA high while SCL is released.
+      NackPulse : begin
+        if (!scl_i) begin
+          state_d = NackHold;
+          load_tcount = 1'b1;
+          tcount_sel = tClockStart;
+        end
+      end
+      // NackHold: target holds SDA high while SCL is pulled low.
+      NackHold : begin
+        if (tcount_q == 20'd1) begin
+          // After sending NACK go back to Idle state.
+          state_d = Idle;
+        end
+      end
       // StretchAddr: The address phase can not yet be completed, stretch
       // clock and wait.
       StretchAddr : begin
         if (!stretch_addr) begin
           // When done stretching send an ACK.
           state_d = AddrAckWait;
+          load_tcount = 1'b1;
+          tcount_sel = tClockStart;
+        end else if (nack_timeout) begin
+          state_d = NackWait;
           load_tcount = 1'b1;
           tcount_sel = tClockStart;
         end
@@ -1273,6 +1358,10 @@ module i2c_fsm import i2c_pkg::*;
       StretchAcqFull : begin
         if (!stretch_rx) begin
           state_d = AcquireAckWait;
+          load_tcount = 1'b1;
+          tcount_sel = tClockStart;
+        end else if (nack_timeout) begin
+          state_d = NackWait;
           load_tcount = 1'b1;
           tcount_sel = tClockStart;
         end

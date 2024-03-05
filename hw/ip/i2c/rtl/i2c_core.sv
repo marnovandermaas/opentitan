@@ -44,6 +44,8 @@ module i2c_core import i2c_pkg::*;
   // Maximum number of bits required to represent the level/depth of any FIFO.
   localparam int unsigned MaxFifoDepthW = 12;
 
+  localparam int unsigned AcqFifoWidth = 11;
+
   logic [15:0] thigh;
   logic [15:0] tlow;
   logic [15:0] t_r;
@@ -57,6 +59,8 @@ module i2c_core import i2c_pkg::*;
   logic [30:0] stretch_timeout;
   logic        timeout_enable;
   logic [31:0] host_timeout;
+  logic [30:0] nack_timeout;
+  logic        nack_timeout_en;
 
   logic scl_sync;
   logic sda_sync;
@@ -121,11 +125,11 @@ module i2c_core import i2c_pkg::*;
 
   logic                     acq_fifo_wvalid;
   logic                     acq_fifo_wready;
-  logic [9:0]               acq_fifo_wdata;
+  logic [AcqFifoWidth-1:0]  acq_fifo_wdata;
   logic [AcqFifoDepthW-1:0] acq_fifo_depth;
   logic                     acq_fifo_rvalid;
   logic                     acq_fifo_rready;
-  logic [9:0]               acq_fifo_rdata;
+  logic [AcqFifoWidth-1:0]  acq_fifo_rdata;
 
   logic                     i2c_fifo_txrst;
   logic                     i2c_fifo_acqrst;
@@ -157,7 +161,7 @@ module i2c_core import i2c_pkg::*;
   logic        unused_acq_thr_qe;
   logic [7:0]  unused_rx_fifo_rdata_q;
   logic [7:0]  unused_acq_fifo_adata_q;
-  logic [1:0]  unused_acq_fifo_signal_q;
+  logic [2:0]  unused_acq_fifo_signal_q;
   logic        unused_alert_test_qe;
   logic        unused_alert_test_q;
 
@@ -180,7 +184,7 @@ module i2c_core import i2c_pkg::*;
   assign hw2reg.target_fifo_status.txlvl.d = MaxFifoDepthW'(tx_fifo_depth);
   assign hw2reg.target_fifo_status.acqlvl.d = MaxFifoDepthW'(acq_fifo_depth);
   assign hw2reg.acqdata.abyte.d = acq_fifo_rdata[7:0];
-  assign hw2reg.acqdata.signal.d = acq_fifo_rdata[9:8];
+  assign hw2reg.acqdata.signal.d = acq_fifo_rdata[AcqFifoWidth-1:8];
 
   assign override = reg2hw.ovrd.txovrden;
 
@@ -224,6 +228,8 @@ module i2c_core import i2c_pkg::*;
   assign stretch_timeout = reg2hw.timeout_ctrl.val.q;
   assign timeout_enable  = reg2hw.timeout_ctrl.en.q;
   assign host_timeout    = reg2hw.host_timeout_ctrl.q;
+  assign nack_timeout    = reg2hw.target_timeout_ctrl.val.q;
+  assign nack_timeout_en = reg2hw.target_timeout_ctrl.en.q;
 
   assign i2c_fifo_rxrst      = reg2hw.fifo_ctrl.rxrst.q & reg2hw.fifo_ctrl.rxrst.qe;
   assign i2c_fifo_fmtrst     = reg2hw.fifo_ctrl.fmtrst.q & reg2hw.fifo_ctrl.fmtrst.qe;
@@ -323,7 +329,7 @@ module i2c_core import i2c_pkg::*;
   // Need to add a valid qualification to write only payload bytes
   logic valid_target_lb_wr;
   i2c_acq_byte_id_e acq_type;
-  assign acq_type = i2c_acq_byte_id_e'(acq_fifo_rdata[9:8]);
+  assign acq_type = i2c_acq_byte_id_e'(acq_fifo_rdata[AcqFifoWidth-1:8]);
 
   assign valid_target_lb_wr = target_enable & (acq_type == AcqData);
 
@@ -357,7 +363,7 @@ module i2c_core import i2c_pkg::*;
                            (target_loopback & (tx_fifo_wready | (acq_type != AcqData)));
 
   prim_fifo_sync #(
-    .Width(10),
+    .Width(AcqFifoWidth),
     .Pass(1'b0),
     .Depth(AcqFifoDepth)
   ) u_i2c_acqfifo (
@@ -454,6 +460,8 @@ module i2c_core import i2c_pkg::*;
     .stretch_timeout_i       (stretch_timeout),
     .timeout_enable_i        (timeout_enable),
     .host_timeout_i          (host_timeout),
+    .nack_timeout_i          (nack_timeout),
+    .nack_timeout_en_i       (nack_timeout_en),
     .target_address0_i       (target_address0),
     .target_mask0_i          (target_mask0),
     .target_address1_i       (target_address1),
