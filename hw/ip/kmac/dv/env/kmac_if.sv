@@ -16,7 +16,7 @@ interface kmac_if(input clk_i, input rst_ni);
     lc_escalate_en_i = val;
   endfunction
 
-  `ASSERT(KmacMaskingO_A, `EN_MASKING == en_masking_o)
+  `ASSERT(KmacMaskingO_A, (`EN_MASKING && `EN_FULL_KMAC) == en_masking_o)
 
   `ASSERT(AppKeymgrErrOutputZeros_A, app_rsp[AppKeymgr].error |->
           app_rsp[AppKeymgr].digest_share0 == 0 && app_rsp[AppKeymgr].digest_share1 == 0)

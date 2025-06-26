@@ -15,7 +15,7 @@ class kmac_test_vectors_base_vseq extends kmac_smoke_vseq;
     super.pre_start();
   endtask
 
-  task body();
+  task kmac_kmac_test_vectors_base_seq();
     test_vectors_pkg::test_vectors_t vectors[];
 
     // Randomly pick a single test vector set to limit test run time.
@@ -104,6 +104,12 @@ class kmac_test_vectors_base_vseq extends kmac_smoke_vseq;
 
         compare_digest(exp_digest, share0, share1, cfg.enable_masking);
       end
+    end
+  endtask
+
+  task body();
+    if (full_kmac) begin
+      kmac_kmac_test_vectors_base_seq();
     end
   endtask
 

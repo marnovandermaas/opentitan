@@ -404,7 +404,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                 end
               end
               StAppCfg: begin
-                if (app_mode == AppKeymgr &&
+                if (app_mode == AppKeymgr && cfg.enable_full_kmac &&
                     !cfg.keymgr_sideload_agent_cfg.vif.sideload_key.valid) begin
                   app_st = StKeyMgrErrKeyNotValid;
                 end else begin
@@ -789,10 +789,12 @@ class kmac_scoreboard extends cip_base_scoreboard #(
           kmac_cmd = item.a_data[KmacCmdIdx:0];
 
           // Handle hash_cnt clear conditions
-          if (item.a_data[KmacHashCntClrIdx]) `DV_CHECK(ral.entropy_refresh_hash_cnt.predict(0));
-          if (item.a_data[KmacEntropyReqIdx]) begin
-            `DV_CHECK(ral.entropy_refresh_hash_cnt.predict(0));
-            set_entropy_fetch(1);
+          if (cfg.enable_full_kmac) begin
+            if (item.a_data[KmacHashCntClrIdx]) `DV_CHECK(ral.entropy_refresh_hash_cnt.predict(0));
+            if (item.a_data[KmacEntropyReqIdx]) begin
+              `DV_CHECK(ral.entropy_refresh_hash_cnt.predict(0));
+              set_entropy_fetch(1);
+            end
           end
 
           if (app_fsm_active) begin
@@ -1031,7 +1033,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
         end
       end
       "entropy_refresh_threshold_shadowed": begin
-        if (addr_phase_write &&
+        if (addr_phase_write && cfg.enable_full_kmac &&
             (dv_base_csr.is_staged() || dv_base_csr.get_shadow_update_err())) begin
           bit [HASH_CNT_WIDTH-1:0] threshold = item.a_data;
           if (threshold > 0 && threshold <= `gmv(ral.entropy_refresh_hash_cnt)) begin
@@ -1700,23 +1702,27 @@ class kmac_scoreboard extends cip_base_scoreboard #(
       // We need to essentially decode the encoded output length that is
       // written to the msgfifo as a post-fix to the actual message.
       sha3_pkg::CShake: begin
-        bit [MAX_ENCODE_WIDTH-1:0] full_len = '0;
-        // the very last byte written to msgfifo is the number of bytes that
-        // when put together represent the encoded output length.
-        bit [7:0] num_encoded_byte = msg.pop_back();
+        if (cfg.enable_full_kmac) begin
+          bit [MAX_ENCODE_WIDTH-1:0] full_len = '0;
+          // the very last byte written to msgfifo is the number of bytes that
+          // when put together represent the encoded output length.
+          bit [7:0] num_encoded_byte = msg.pop_back();
 
-        for (int i = 0; i < num_encoded_byte; i++) begin
-          full_len[i*8 +: 8] = msg.pop_back();
-        end
+          for (int i = 0; i < num_encoded_byte; i++) begin
+            full_len[i*8 +: 8] = msg.pop_back();
+          end
 
-        // We should set xof_en if `right_encode(0)` was written to the msgfifo after the message.
-        // right_encode(0) = '{'h0, 'h1}
-        if (num_encoded_byte == 1 && full_len == 0) begin
-          xof_en = 1;
-          // can't set  the output length to 0, so we fall back to the Shake behavior here
-          output_len = digest_share0.size();
+          // We should set xof_en if `right_encode(0)` was written to the msgfifo after the message.
+          // right_encode(0) = '{'h0, 'h1}
+          if (num_encoded_byte == 1 && full_len == 0) begin
+            xof_en = 1;
+            // can't set  the output length to 0, so we fall back to the Shake behavior here
+            output_len = digest_share0.size();
+          end else begin
+            output_len = full_len / 8;
+          end
         end else begin
-          output_len = full_len / 8;
+          output_len = digest_share0.size();
         end
       end
     endcase
@@ -1806,12 +1812,12 @@ class kmac_scoreboard extends cip_base_scoreboard #(
   endfunction
 
   // Increment the hash_cnt under the following conditions:
-  // 1). Masking mode is On
+  // 1). Masking mode is On and full kmac is disabled
   // 2). Hash_cnt is less than the threshold (except threshold == 0)
   // 3). Hash_cnt is not overflowed
   function void incr_and_predict_hash_cnt();
     bit [HASH_CNT_WIDTH-1:0] curr_hash_cnt_val = `gmv(ral.entropy_refresh_hash_cnt);
-    if (cfg.enable_masking == 0) return;
+    if (cfg.enable_masking == 0 || cfg.enable_full_kmac == 0) return;
 
     // Check overflow
     if (curr_hash_cnt_val != '1) begin

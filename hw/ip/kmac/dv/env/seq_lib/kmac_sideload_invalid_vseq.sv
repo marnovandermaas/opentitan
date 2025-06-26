@@ -28,7 +28,9 @@ class kmac_sideload_invalid_vseq extends kmac_long_msg_and_output_vseq;
   }
 
   constraint kmac_en_c {
-    kmac_en == 1;
+    if (!full_kmac) {
+      kmac_en == 0;
+    }
   }
 
   constraint provide_sideload_key_c {
@@ -159,7 +161,7 @@ class kmac_sideload_invalid_vseq extends kmac_long_msg_and_output_vseq;
     super.pre_start();
   endtask
 
-  virtual task body();
+  task kmac_sideload_invalid_seq();
     key_sideload_set_seq sideload_seq;
     string key_valid_path = "tb.dut.keymgr_key_i.valid";
     string app_fsm_path = "tb.dut.u_app_intf.st";
@@ -242,6 +244,12 @@ class kmac_sideload_invalid_vseq extends kmac_long_msg_and_output_vseq;
       `DV_CHECK_RANDOMIZE_WITH_FATAL(sideload_seq,
                                      sideload_key.valid == 0;)
       sideload_seq.start(p_sequencer.key_sideload_sequencer_h);
+    end
+  endtask
+
+  virtual task body();
+    if (full_kmac) begin
+      kmac_sideload_invalid_seq();
     end
   endtask
 

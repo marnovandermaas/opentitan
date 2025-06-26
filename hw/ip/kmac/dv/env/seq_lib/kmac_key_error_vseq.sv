@@ -12,7 +12,7 @@ class kmac_key_error_vseq extends kmac_app_vseq;
     num_trans inside {[1:20]};
   }
 
-  virtual task body();
+  virtual task kmac_key_error_seq();
     kmac_pkg::err_t kmac_err;
     cfg.en_scb = 0;
     check_keymgr_rsp_nonblocking();
@@ -69,6 +69,12 @@ class kmac_key_error_vseq extends kmac_app_vseq;
     // ICEBOX: enable scb and run normal sequence, then add this sequence to stress_all sequence.
     // cfg.en_scb = 1;
     // super.body();
+  endtask
+
+  virtual task body();
+    if (full_kmac) begin
+      kmac_key_error_seq();
+    end
   endtask
 
   // While scb is not enabled, this task checks that during KeyNotValid error case, app interface

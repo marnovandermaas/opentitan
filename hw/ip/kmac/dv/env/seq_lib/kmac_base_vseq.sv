@@ -132,6 +132,8 @@ class kmac_base_vseq extends cip_base_vseq #(
 
   bit do_kmac_init = 1'b1;
 
+  bit full_kmac = 1'b1;
+
   // constrain xof_en to 0 if not in kmac mode
   constraint xof_en_c {
     (!kmac_en) -> (xof_en == 1'b0);
@@ -141,7 +143,7 @@ class kmac_base_vseq extends cip_base_vseq #(
   constraint hash_mode_c {
     if (kmac_en) {
       hash_mode == sha3_pkg::CShake;
-    } else {
+    } else if (full_kmac) {
       hash_mode != sha3_pkg::CShake;
     }
   }
@@ -286,6 +288,7 @@ class kmac_base_vseq extends cip_base_vseq #(
 
   virtual task pre_start();
     super.pre_start();
+    full_kmac = cfg.enable_full_kmac;
     `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(static_entropy_mode,
         static_entropy_mode inside {EntropyModeSw, EntropyModeEdn};)
   endtask

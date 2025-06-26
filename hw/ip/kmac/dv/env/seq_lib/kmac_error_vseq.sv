@@ -25,11 +25,19 @@ class kmac_error_vseq extends kmac_app_vseq;
 
     (kmac_err_type == kmac_pkg::ErrSwIssuedCmdInAppActive) -> (en_app == 1);
 
-    (kmac_err_type == kmac_pkg::ErrIncorrectFunctionName) -> (kmac_en == 1);
-
     (kmac_err_type == kmac_pkg::ErrUnexpectedModeStrength) -> (en_app == 0);
 
     (kmac_err_type == kmac_pkg::ErrSwCmdSequence) -> (en_app == 0);
+
+    if (full_kmac) {
+      (kmac_err_type == kmac_pkg::ErrIncorrectFunctionName) -> (kmac_en == 1);
+    } else {
+      // If the stripped KMAC is used the following errors can't be triggered.
+      (kmac_err_type inside
+          {
+           kmac_pkg::ErrSwHashingWithoutEntropyReady,
+           kmac_pkg::ErrIncorrectFunctionName}) == 0;
+    }
   }
 
   virtual task pre_start();

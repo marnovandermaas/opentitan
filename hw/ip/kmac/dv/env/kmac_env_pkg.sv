@@ -108,14 +108,16 @@ package kmac_env_pkg;
     KmacStrengthLSB = 1,
     KmacStrengthMSB = 3,
     KmacModeLSB = 4,
-    KmacModeMSB = 5, KmacMsgEndian = 8,
+    KmacModeMSB = 5,
+    KmacMsgEndian = 8,
     KmacStateEndian = 9,
     KmacSideload = 12,
     KmacEntropyModeLSB = 16,
     KmacEntropyModeMSB = 17,
     KmacFastEntropy = 19,
     KmacEntropyReady = 24,
-    KmacErrProcessed = 25
+    KmacErrProcessed = 25,
+    KmacEnUnsupportedModestrength = 26
   } kmac_cfg_e;
 
   // STATUS csr bit positions

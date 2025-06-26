@@ -31,7 +31,7 @@ class kmac_app_vseq extends kmac_sideload_vseq;
 
   constraint hash_mode_c {
     if (en_app) {
-      if (app_mode == AppKeymgr) {
+      if (app_mode == AppKeymgr && full_kmac) {
         kmac_en == 1;
       } else {
         kmac_en == 0;

@@ -88,6 +88,15 @@
       local:   "false"
       expose:  "true"
     }
+    { name:    "EnFullKmac"
+      type:    "bit"
+      default: "1"
+      desc:    '''
+        Disable(0) or enable(1) KMAC functionality.
+        '''
+      local:   "false"
+      expose:  "true"
+    }
     { name:    "SwKeyMasked"
       type:    "bit"
       default: "0"
