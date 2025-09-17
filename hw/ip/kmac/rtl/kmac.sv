@@ -1717,5 +1717,5 @@ module kmac
   `ASSUME(StrippedKmacState_M, EnFullKmac == 0 |-> kmac_st inside
       {KmacIdle, KmacPrefix, KmacMsgFeed, KmacDigest, KmacTerminalError})
   `ASSUME(StrippedSha3Mode_M, EnFullKmac == 0 |-> app_sha3_mode inside
-      {sha3_pkg::Sha3, sha3_pkg::Shake, sha3_pkg::CShake})
+      {ot_sha3_pkg::Sha3, ot_sha3_pkg::Shake, ot_sha3_pkg::CShake})
 endmodule
