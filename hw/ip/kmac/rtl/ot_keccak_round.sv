@@ -33,10 +33,10 @@
 // data of the DOM multipliers when also providing fresh randomness and vice
 // versa. Updating one without the other could lead to undesired SCA leakage.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module keccak_round
-  import prim_mubi_pkg::*;
+module ot_keccak_round
+  import caliptra_prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 
@@ -93,10 +93,10 @@ module keccak_round
   //                     permitted window
   output logic             rst_storage_error_o,
 
-  input  prim_mubi_pkg::mubi4_t clear_i     // Clear internal state to '0
+  input  mubi4_t clear_i     // Clear internal state to '0
 );
 
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 
   /////////////////////
   // Control signals //
@@ -177,7 +177,7 @@ module keccak_round
   assign rnd_eq_end = (int'(round) == MaxRound - 1);
 
   keccak_st_e keccak_st, keccak_st_d;
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, KeccakStIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, KeccakStIdle)
 
   // Next state logic and output logic
   // SEC_CM: FSM.SPARSE
@@ -213,7 +213,7 @@ module keccak_round
 
           xor_message    = 1'b 1;
           update_storage = 1'b 1;
-        end else if (prim_mubi_pkg::mubi4_test_true_strict(clear_i)) begin
+        end else if (mubi4_test_true_strict(clear_i)) begin
           // Opt1. State machine allows resetting the storage only in Idle
           // Opt2. storage resets regardless of states but clear_i
           // Both are added in the design at this time. Will choose the
@@ -455,9 +455,9 @@ module keccak_round
 
   // SEC_CM: LOGIC.INTEGRITY
   logic rst_n;
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
    .Width(1)
-  ) u_prim_sec_anchor_buf (
+  ) u_caliptra_prim_sec_anchor_buf (
     .in_i(rst_ni),
     .out_o(rst_n)
   );
@@ -509,7 +509,7 @@ module keccak_round
     if (rst_storage) begin
       // FSM should be in KeccakStIdle and clear_i should be high
       if ((keccak_st != KeccakStIdle) ||
-        prim_mubi_pkg::mubi4_test_false_loose(clear_i)) begin
+        mubi4_test_false_loose(clear_i)) begin
         rst_storage_error = 1'b 1;
       end
     end
@@ -520,7 +520,7 @@ module keccak_round
   //////////////
   // Datapath //
   //////////////
-  keccak_2share #(
+  ot_keccak_2share #(
     .Width(Width),
     .EnMasking(EnMasking),
     .ForceRandExt(ForceRandExt)
@@ -553,7 +553,7 @@ module keccak_round
   // Round number
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(RndW)
   ) u_round_count (
     .clk_i,
@@ -583,28 +583,28 @@ module keccak_round
   // Assertions //
   ////////////////
 
-  // Only allow `DInWidth` that `Width` is integer divisible by `DInWidth`
-  `ASSERT_INIT(WidthDivisableByDInWidth_A, (Width % DInWidth) == 0)
+  // Only allow `DInWidth` that `Width` is integer divisable by `DInWidth`
+  `CALIPTRA_ASSERT_INIT(WidthDivisableByDInWidth_A, (Width % DInWidth) == 0)
 
-  // If `run_i` triggered, it shall complete
-  //`ASSERT(RunResultComplete_A, run_i ##[MaxRound:] complete_o, clk_i, !rst_ni)
+  // If `run_i` triggerred, it shall complete
+  //`CALIPTRA_ASSERT(RunResultComplete_A, run_i ##[MaxRound:] complete_o, clk_i, !rst_ni)
 
   // valid_i and run_i cannot be asserted at the same time
-  `ASSUME(OneHot0ValidAndRun_A, $onehot0({valid_i, run_i}), clk_i, !rst_ni)
+  `CALIPTRA_ASSUME(OneHot0ValidAndRun_A, $onehot0({valid_i, run_i}), clk_i, !rst_ni)
 
   // valid_i, run_i only asserted in Idle state
-  `ASSUME(ValidRunAssertStIdle_A, valid_i || run_i |-> keccak_st == KeccakStIdle, clk_i, !rst_ni)
+  `CALIPTRA_ASSUME(ValidRunAssertStIdle_A, valid_i || run_i |-> keccak_st == KeccakStIdle, clk_i, !rst_ni)
 
   // clear_i is assumed to be asserted in Idle state
-  `ASSUME(ClearAssertStIdle_A,
-    prim_mubi_pkg::mubi4_test_true_strict(clear_i)
+  `CALIPTRA_ASSUME(ClearAssertStIdle_A,
+    mubi4_test_true_strict(clear_i)
      |-> keccak_st == KeccakStIdle, clk_i, !rst_ni)
 
   // EnMasking controls the valid states
   if (EnMasking) begin : gen_mask_st_chk
-    `ASSERT(EnMaskingValidStates_A, keccak_st != KeccakStActive, clk_i, !rst_ni)
+    `CALIPTRA_ASSERT(EnMaskingValidStates_A, keccak_st != KeccakStActive, clk_i, !rst_ni)
   end else begin : gen_unmask_st_chk
-    `ASSERT(UnmaskValidStates_A, !(keccak_st
+    `CALIPTRA_ASSERT(UnmaskValidStates_A, !(keccak_st
         inside {KeccakStPhase1, KeccakStPhase2Cycle1, KeccakStPhase2Cycle2, KeccakStPhase2Cycle3}),
         clk_i, !rst_ni)
   end

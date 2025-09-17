@@ -4,10 +4,11 @@
 //
 // SHA3 padding logic
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module sha3pad
-  import sha3_pkg::*;
+module ot_sha3pad
+  import caliptra_prim_mubi_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   parameter  bit EnMasking = 0,
   localparam int Share = (EnMasking) ? 2 : 1
@@ -55,12 +56,12 @@ module sha3pad
   // done_i is a pulse signal to make the pad logic to clear internal variables
   // and to move back to the Idle state for next hashing process.
   // done_i may not needed if sw controls the keccak_round directly.
-  input prim_mubi_pkg::mubi4_t done_i,
+  input mubi4_t done_i,
 
   // Indication of the Keccak Sponge Absorbing is complete, it is time for SW to
   // control the Keccak-round if it needs more digest, or complete by asserting
   // `done_i`
-  output prim_mubi_pkg::mubi4_t absorbed_o,
+  output mubi4_t absorbed_o,
 
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
@@ -188,7 +189,7 @@ module sha3pad
 
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(KeccakCountW)
   ) u_sentmsg_count (
     .clk_i,
@@ -268,7 +269,7 @@ module sha3pad
       process_latched <= 1'b 0;
     end else if (process_i) begin
       process_latched <= 1'b 1;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (mubi4_test_true_strict(done_i)) begin
       process_latched <= 1'b0;
     end
   end
@@ -276,7 +277,7 @@ module sha3pad
   // State Register ===========================================================
   pad_st_e st, st_d;
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
 
   // `end_of_block` indicates current beat is end of the block
   // It shall set when the address reaches to the end of the block. End address
@@ -288,9 +289,9 @@ module sha3pad
 
   // Next logic and output logic ==============================================
   // SEC_CM: ABSORBED.CTRL.MUBI
-  prim_mubi_pkg::mubi4_t absorbed_d;
+  mubi4_t absorbed_d;
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) absorbed_o <= prim_mubi_pkg::MuBi4False;
+    if (!rst_ni) absorbed_o <= MuBi4False;
     else         absorbed_o <= absorbed_d;
   end
 
@@ -309,7 +310,7 @@ module sha3pad
     en_msgbuf = 1'b 0;
     clr_msgbuf = 1'b 0;
 
-    absorbed_d = prim_mubi_pkg::MuBi4False;
+    absorbed_d = MuBi4False;
 
     sparse_fsm_error_o = 1'b 0;
 
@@ -469,7 +470,7 @@ module sha3pad
         if (keccak_complete_i) begin
           st_d = StPadIdle;
 
-          absorbed_d = prim_mubi_pkg::MuBi4True;
+          absorbed_d = MuBi4True;
         end else begin
           st_d = StPadFlush;
         end
@@ -522,7 +523,7 @@ module sha3pad
   logic [MsgWidth-1:0] prefix_sliced;
   logic [MsgWidth-1:0] prefix_data [Share];
 
-  prim_slicer #(
+  caliptra_prim_slicer #(
     .InW (PrefixSize*8),
     .IndexW(KeccakMsgAddrW),
     .OutW(MsgWidth)
@@ -736,37 +737,37 @@ module sha3pad
   ////////////////
 
   // Prefix size is smaller than the smallest Keccak Block Size, which is 72 bytes.
-  `ASSERT_INIT(PrefixLessThanBlock_A, PrefixSize/8 < KeccakRate[4])
+  `CALIPTRA_ASSERT_INIT(PrefixLessThanBlock_A, PrefixSize/8 < KeccakRate[4])
 
   // Some part of datapath in sha3pad assumes Data width as 64bit.
   // If data width need to be changed, funcpad_data part should be changed too.
   // Also, The blocksize shall be divided by MsgWidth, which means, MsgWidth
   // can be {16, 32, 64} even funcpad_data mux is fully flexible.
-  `ASSERT_INIT(MsgWidthidth_A, MsgWidth == 64)
+  `CALIPTRA_ASSERT_INIT(MsgWidthidth_A, MsgWidth == 64)
 
   // Assume pulse signals: start, process, done
-  `ASSUME(StartPulse_A, start_i |=> !start_i)
-  `ASSUME(ProcessPulse_A, process_i |=> !process_i)
-  `ASSUME(DonePulse_A,
-    prim_mubi_pkg::mubi4_test_true_strict(done_i) |=>
-      prim_mubi_pkg::mubi4_test_false_strict(done_i))
+  `CALIPTRA_ASSUME(StartPulse_A, start_i |=> !start_i)
+  `CALIPTRA_ASSUME(ProcessPulse_A, process_i |=> !process_i)
+  `CALIPTRA_ASSUME(DonePulse_A,
+    mubi4_test_true_strict(done_i) |=>
+        mubi4_test_false_strict(done_i))
 
   // ASSERT output pulse signals: absorbed_o, keccak_run_o
-  `ASSERT(AbsorbedPulse_A,
-    prim_mubi_pkg::mubi4_test_true_strict(absorbed_o) |=>
-      prim_mubi_pkg::mubi4_test_false_strict(absorbed_o))
-  `ASSERT(KeccakRunPulse_A, keccak_run_o |=> !keccak_run_o)
+  `CALIPTRA_ASSERT(AbsorbedPulse_A,
+    mubi4_test_true_strict(absorbed_o) |=>
+        mubi4_test_false_strict(absorbed_o))
+  `CALIPTRA_ASSERT(KeccakRunPulse_A, keccak_run_o |=> !keccak_run_o)
 
   // start_i, done_i, process_i cannot set high at the same time
-  `ASSUME(StartProcessDoneMutex_a,
+  `CALIPTRA_ASSUME(StartProcessDoneMutex_a,
     $onehot0({
       start_i,
       process_i,
-      prim_mubi_pkg::mubi4_test_true_loose(done_i)
+      mubi4_test_true_loose(done_i)
     }))
 
   // Sequence, start_i --> process_i --> absorbed_o --> done_i
-  //`ASSUME(Sequence_a, start_i ##[1:$] process_i ##[1:$] ##[1:$] absorbed_o ##[1:$] done_i)
+  //`CALIPTRA_ASSUME(Sequence_a, start_i ##[1:$] process_i ##[1:$] ##[1:$] absorbed_o ##[1:$] done_i)
 
 `ifndef SYNTHESIS
   // Process only asserts after start and all message are fed.
@@ -780,7 +781,7 @@ module sha3pad
       start_valid <= 1'b 1;
     end else if (start_i) begin
       start_valid <= 1'b 0;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (mubi4_test_true_strict(done_i)) begin
       start_valid <= 1'b 1;
     end
   end
@@ -797,88 +798,88 @@ module sha3pad
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       done_valid <= 1'b 0;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(absorbed_o)) begin
+    end else if (mubi4_test_true_strict(absorbed_o)) begin
       done_valid <= 1'b 1;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (mubi4_test_true_strict(done_i)) begin
       done_valid <= 1'b 0;
     end
   end
 
   // Message can be fed in between start_i and process_i.
-  `ASSUME(MessageCondition_M, msg_valid_i && msg_ready_o |-> process_valid && !process_i)
+  `CALIPTRA_ASSUME(MessageCondition_M, msg_valid_i && msg_ready_o |-> process_valid && !process_i)
 
   // Message ready should be asserted only in between start_i and process_i
-  `ASSERT(MsgReadyCondition_A, msg_ready_o |-> process_valid && !process_i)
+  `CALIPTRA_ASSERT(MsgReadyCondition_A, msg_ready_o |-> process_valid && !process_i)
 
-  `ASSUME(ProcessCondition_M, process_i |-> process_valid)
-  `ASSUME(StartCondition_M, start_i |-> start_valid)
-  `ASSUME(DoneCondition_M,
-    prim_mubi_pkg::mubi4_test_true_strict(done_i) |-> done_valid)
+  `CALIPTRA_ASSUME(ProcessCondition_M, process_i |-> process_valid)
+  `CALIPTRA_ASSUME(StartCondition_M, start_i |-> start_valid)
+  `CALIPTRA_ASSUME(DoneCondition_M,
+      mubi4_test_true_strict(done_i) |-> done_valid)
 
   // Assume mode_i and strength_i are stable during the operation
   // This will be guarded at the kmac top level
-  `ASSUME(ModeStableDuringOp_M,
+  `CALIPTRA_ASSUME(ModeStableDuringOp_M,
     $changed(mode_i) |-> start_valid)
-  `ASSUME(StrengthStableDuringOp_M,
+  `CALIPTRA_ASSUME(StrengthStableDuringOp_M,
     $changed(strength_i) |-> start_valid)
 
 `endif // SYNTHESIS
 
   // If not full block is written, the pad shall send message to keccak_round
   // If it is end of the message, the state moves to StPad and send the request
-  `ASSERT(CompleteBlockWhenProcess_A,
+  `CALIPTRA_ASSERT(CompleteBlockWhenProcess_A,
     $rose(process_latched) && (!end_of_block && !sent_blocksize )
     && !(st inside {StPrefixWait, StMessageWait}) |-> ##[1:5] keccak_valid_o,
     clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))
 
   // If process_i asserted, completion shall be asserted shall be asserted
-  //`ASSERT(ProcessToAbsorbed_A, process_i |=> strong(##[24*Share:$] absorbed_o))
+  //`CALIPTRA_ASSERT(ProcessToAbsorbed_A, process_i |=> strong(##[24*Share:$] absorbed_o))
 
 
   // Assumption of input mode_i and strength_i
   // SHA3 variants: SHA3-224, SHA3-256, SHA3-384, SHA3-512
   // SHAKE, cSHAKE variants: SHAKE128, SHAKE256, cSHAKE128, cSHAKE256
-  `ASSUME_FPV(ModeStrengthCombinations_M,
+  `CALIPTRA_ASSUME_FPV(ModeStrengthCombinations_M,
     start_i |->
       (mode_i == Sha3 && (strength_i inside {L224, L256, L384, L512})) ||
       ((mode_i == Shake || mode_i == CShake) && (strength_i inside {L128, L256})),
     clk_i, !rst_ni)
 
   // No partial write is allowed for Message FIFO interface
-  `ASSUME(NoPartialMsgFifo_M,
+  `CALIPTRA_ASSUME(NoPartialMsgFifo_M,
     keccak_valid_o && (sel_mux == MuxFifo) |-> (&msg_strb_i) == 1'b1,
     clk_i, !rst_ni)
 
   // When transaction is stored into msg_buf, it shall be partial write.
-  `ASSUME(AlwaysPartialMsgBuf_M,
+  `CALIPTRA_ASSUME(AlwaysPartialMsgBuf_M,
     en_msgbuf |-> msg_valid_i && (msg_strb_i[MsgStrbW-1] == 1'b0),
     clk_i, !rst_ni)
 
   // if partial write comes and is acked, then no more msg_valid_i until
   // next message
-  `ASSUME(PartialEndOfMsg_M,
+  `CALIPTRA_ASSUME(PartialEndOfMsg_M,
     msg_valid_i && msg_ready_o && msg_partial |=>
       !msg_valid_i ##[1:$] $stable(msg_valid_i) ##1 process_latched,
     clk_i, !rst_ni)
 
   // At the first clock in StPad01 state, sent_blocksize shall not be set
-  `ASSERT(Pad01NotAttheEndOfBlock_A,
+  `CALIPTRA_ASSERT(Pad01NotAttheEndOfBlock_A,
     (st == StPad && st_d == StPad01) |-> !end_of_block,
     clk_i, !rst_ni)
 
   // When data sent to the keccak_round, the address should be in the range
-  `ASSERT(KeccakAddrInRange_A,
+  `CALIPTRA_ASSERT(KeccakAddrInRange_A,
     keccak_valid_o |-> keccak_addr_o < KeccakRate[strength_i],
     clk_i, !rst_ni)
 
   // NS data shall be stable during the operation.
-  //`ASSUME(NsStableInProcess_A,
+  //`CALIPTRA_ASSUME(NsStableInProcess_A,
   //  $stable(ns_data_i) throughout(start_i ##[1:$] process_i ##[1:$] absorbed_o),
   //  clk_i, !rst_ni)
 
   // Functional Coverage
-  `COVER(StMessageFeed_C, st == StMessage)
-  `COVER(StPad_C, st == StPad01 && sent_blocksize)
-  `COVER(StPadSendMsg_C, st == StPad01 && keccak_ack)
-  `COVER(StComplete_C, st == StPadFlush)
+  `CALIPTRA_COVER(StMessageFeed_C, st == StMessage)
+  `CALIPTRA_COVER(StPad_C, st == StPad01 && sent_blocksize)
+  `CALIPTRA_COVER(StPadSendMsg_C, st == StPad01 && keccak_ack)
+  `CALIPTRA_COVER(StComplete_C, st == StPadFlush)
 endmodule

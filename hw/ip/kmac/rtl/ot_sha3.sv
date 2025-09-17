@@ -6,10 +6,11 @@
 //
 // It instantiates a keccak_round with 1600 bits of the state.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module sha3
-  import sha3_pkg::*;
+module ot_sha3
+  import caliptra_prim_mubi_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   // Enable Masked Keccak if 1
   parameter  bit EnMasking = 0,
@@ -34,7 +35,7 @@ module sha3
   output logic              rand_consumed_o,
 
   // N, S: Used in cSHAKE mode only
-  input [NSRegisterSize*8-1:0] ns_data_i, // See sha3_pkg for details
+  input [NSRegisterSize*8-1:0] ns_data_i, // See ot_sha3_pkg for details
 
   // configurations
   input sha3_mode_e       mode_i,     // see sha3pad for details
@@ -47,11 +48,11 @@ module sha3
   // run_i is a pulse signal to trigger the keccak_round manually by SW.
   // It is used to run additional keccak_f after sponge absorbing is completed.
   // See `keccak_run` signal
-  input                        run_i,
-  input prim_mubi_pkg::mubi4_t done_i,    // see sha3pad for details
+  input         run_i,
+  input mubi4_t done_i,    // see sha3pad for details
 
-  output prim_mubi_pkg::mubi4_t absorbed_o,
-  output logic                  squeezing_o,
+  output mubi4_t absorbed_o,
+  output logic   squeezing_o,
 
   // Indicate of one block processed. KMAC main state tracks the progression
   // based on this signal.
@@ -113,7 +114,7 @@ module sha3
   // absorbed is a pulse signal that indicates sponge absorbing is done.
   // After this, sha3 core allows software to manually run until squeezing
   // is completed, which is the `done_i` pulse signal.
-  prim_mubi_pkg::mubi4_t absorbed;
+  mubi4_t absorbed;
 
   // `squeezing` is a status indicator that SHA3 core is in sponge squeezing
   // stage. In this stage, the state output is valid, and software can manually
@@ -131,7 +132,7 @@ module sha3
 
   // Keccak control signal (filtered by State Machine)
   logic keccak_start, keccak_process;
-  prim_mubi_pkg::mubi4_t keccak_done;
+  mubi4_t keccak_done;
 
   // alert signals
   logic round_count_error, msg_count_error;
@@ -195,7 +196,7 @@ module sha3
   // `absorbed` signal. When this signal goes out, the state is still in
   // `StAbsorb`. Next state is `StSqueeze`.
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) absorbed_o <= prim_mubi_pkg::MuBi4False;
+    if (!rst_ni) absorbed_o <= MuBi4False;
     else         absorbed_o <= absorbed;
   end
 
@@ -206,7 +207,7 @@ module sha3
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni)        processing <= 1'b 0;
     else if (process_i) processing <= 1'b 1;
-    else if (prim_mubi_pkg::mubi4_test_true_strict(absorbed)) begin
+    else if (mubi4_test_true_strict(absorbed)) begin
       processing <= 1'b 0;
     end
   end
@@ -224,7 +225,7 @@ module sha3
   ///////////////////
 
   // State Register
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
 
 
   // Next State and Output Logic
@@ -240,7 +241,7 @@ module sha3
     keccak_start = 1'b 0;
     keccak_process = 1'b 0;
     sw_keccak_run = 1'b 0;
-    keccak_done = prim_mubi_pkg::MuBi4False;
+    keccak_done = MuBi4False;
 
     squeezing = 1'b 0;
 
@@ -265,7 +266,7 @@ module sha3
           st_d = StAbsorb_sparse;
 
           keccak_process = 1'b 1;
-        end else if (prim_mubi_pkg::mubi4_test_true_strict(absorbed)) begin
+        end else if (mubi4_test_true_strict(absorbed)) begin
           st_d = StSqueeze_sparse;
         end else begin
           st_d = StAbsorb_sparse;
@@ -282,7 +283,7 @@ module sha3
           st_d = StManualRun_sparse;
 
           sw_keccak_run = 1'b 1;
-        end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+        end else if (mubi4_test_true_strict(done_i)) begin
           st_d = StFlush_sparse;
 
           keccak_done = done_i;
@@ -351,7 +352,7 @@ module sha3
     unique case (st)
       StIdle_sparse: begin
         if (process_i || run_i ||
-          prim_mubi_pkg::mubi4_test_true_loose(done_i)) begin
+          mubi4_test_true_loose(done_i)) begin
           error_o = '{
             valid: 1'b 1,
             code: ErrSha3SwControl,
@@ -361,7 +362,7 @@ module sha3
       end
 
       StAbsorb_sparse: begin
-        if (start_i || run_i || prim_mubi_pkg::mubi4_test_true_loose(done_i)
+        if (start_i || run_i || mubi4_test_true_loose(done_i)
           || (process_i && processing)) begin
           error_o = '{
             valid: 1'b 1,
@@ -383,7 +384,7 @@ module sha3
 
       StManualRun_sparse: begin
         if (start_i || process_i || run_i ||
-          prim_mubi_pkg::mubi4_test_true_loose(done_i)) begin
+          mubi4_test_true_loose(done_i)) begin
           error_o = '{
             valid: 1'b 1,
             code: ErrSha3SwControl,
@@ -394,7 +395,7 @@ module sha3
 
       StFlush_sparse: begin
         if (start_i || process_i || run_i ||
-          prim_mubi_pkg::mubi4_test_true_loose(done_i)) begin
+          mubi4_test_true_loose(done_i)) begin
           error_o = '{
             valid: 1'b 1,
             code: ErrSha3SwControl,
@@ -412,7 +413,7 @@ module sha3
   ///////////////
 
   // SHA3 pad logic
-  sha3pad #(
+  ot_sha3pad #(
     .EnMasking (EnMasking)
   ) u_pad (
     .clk_i,
@@ -455,9 +456,9 @@ module sha3
   );
 
   // Keccak round logic
-  keccak_round #(
-    .Width    (sha3_pkg::StateW),
-    .DInWidth (sha3_pkg::MsgWidth),
+  ot_keccak_round #(
+    .Width    (ot_sha3_pkg::StateW),
+    .DInWidth (ot_sha3_pkg::MsgWidth),
 
     .EnMasking  (EnMasking)
   ) u_keccak (
@@ -496,7 +497,7 @@ module sha3
   ////////////////
 
   // The Keccak core can only be active when the run REQ is ACKed.
-  `ASSERT(KeccakIdleWhenNoRunHs_A,
+  `CALIPTRA_ASSERT(KeccakIdleWhenNoRunHs_A,
       u_keccak.keccak_st inside {KeccakStActive,
                                  KeccakStPhase1,
                                  KeccakStPhase2Cycle1,
@@ -505,27 +506,27 @@ module sha3
       run_req_o && run_ack_i)
 
   // Unknown check for case statement
-  `ASSERT(MuxSelKnown_A, mux_sel inside {MuxGuard, MuxRelease})
-  `ASSERT(FsmKnown_A, st inside {StIdle_sparse, StAbsorb_sparse, StSqueeze_sparse,
+  `CALIPTRA_ASSERT(MuxSelKnown_A, mux_sel inside {MuxGuard, MuxRelease})
+  `CALIPTRA_ASSERT(FsmKnown_A, st inside {StIdle_sparse, StAbsorb_sparse, StSqueeze_sparse,
                                  StManualRun_sparse, StFlush_sparse, StTerminalError_sparse})
 
   // `state` shall be 0 in invalid
   if (EnMasking) begin: gen_chk_digest_masked
-    `ASSERT(StateZeroInvalid_A, !state_valid_o |-> ((|state_o[0]) | (|state_o[1])) == 1'b 0)
+    `CALIPTRA_ASSERT(StateZeroInvalid_A, !state_valid_o |-> ((|state_o[0]) | (|state_o[1])) == 1'b 0)
   end else begin : gen_chk_digest_unmasked
-    `ASSERT(StateZeroInvalid_A, !state_valid_o |-> (|state_o[0]) == 1'b 0)
+    `CALIPTRA_ASSERT(StateZeroInvalid_A, !state_valid_o |-> (|state_o[0]) == 1'b 0)
   end
 
   // `state_valid_o` asserts only in between the completion and done
-  //`ASSERT(StateValidPeriod_A, state_valid_o |-> )
+  //`CALIPTRA_ASSERT(StateValidPeriod_A, state_valid_o |-> )
 
-  // skip the msg interface assertions as they are in sha3pad.sv
+  // skip the msg interface assertions as they are in ot_sha3pad.sv
 
   // Software run signal happens in Squeezing stage
-  `ASSUME(SwRunInSqueezing_a, run_i |-> error_o.valid || (st == StSqueeze_sparse))
+  `CALIPTRA_ASSUME(SwRunInSqueezing_a, run_i |-> error_o.valid || (st == StSqueeze_sparse))
 
   // If control received but not propagated into submodules, it is error condition
-  `ASSERT(ErrDetection_A, error_o.valid
+  `CALIPTRA_ASSERT(ErrDetection_A, error_o.valid
     |-> {start_i,      process_i,      run_i,         done_i}
      != {keccak_start, keccak_process, sw_keccak_run, keccak_done})
 

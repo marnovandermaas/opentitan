@@ -5,10 +5,10 @@
 // This module is the single round keccak permutation module
 // It supports Keccak with up to 1600b of state
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module keccak_2share
-  import prim_mubi_pkg::*;
+module ot_keccak_2share
+  import caliptra_prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 
@@ -238,7 +238,7 @@ module keccak_2share
         assign unused_out_prd = ^{dom_in_rand_ext_i, out_prd[rot_int(x, 5)]};
       end
 
-      prim_dom_and_2share #(
+      caliptra_prim_dom_and_2share #(
         .DW (WSheetHalf), // a half sheet
         .Pipeline(1) // Process the full sheet in 3 clock cycles. This reduces
                      // SCA leakage.
@@ -332,18 +332,18 @@ module keccak_2share
   // Assertions //
   ////////////////
 
-  `ASSERT_INIT(ValidWidth_A,
+  `CALIPTRA_ASSERT_INIT(ValidWidth_A,
       EnMasking == 0 && Width inside {25, 50, 100, 200, 400, 800, 1600} ||
       EnMasking == 1 && Width inside {50, 100, 200, 400, 800, 1600})
-  `ASSERT_INIT(ValidW_A, W inside {1, 2, 4, 8, 16, 32, 64})
-  `ASSERT_INIT(ValidL_A, L inside {0, 1, 2, 3, 4, 5, 6})
-  `ASSERT_INIT(ValidRound_A, MaxRound <= 24) // Keccak-f only
+  `CALIPTRA_ASSERT_INIT(ValidW_A, W inside {1, 2, 4, 8, 16, 32, 64})
+  `CALIPTRA_ASSERT_INIT(ValidL_A, L inside {0, 1, 2, 3, 4, 5, 6})
+  `CALIPTRA_ASSERT_INIT(ValidRound_A, MaxRound <= 24) // Keccak-f only
 
   // phase_sel_i shall stay for two cycle after change to 1.
   lc_ctrl_pkg::lc_tx_t unused_lc_sig;
   assign unused_lc_sig = lc_escalate_en_i;
   if (EnMasking) begin : gen_selperiod_chk
-    `ASSUME(SelStayTwoCycleIfTrue_A,
+    `CALIPTRA_ASSUME(SelStayTwoCycleIfTrue_A,
         ($past(phase_sel_i) == MuBi4False) && (phase_sel_i == MuBi4True)
         |=> phase_sel_i == MuBi4True, clk_i, !rst_ni ||
             lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))
@@ -400,8 +400,8 @@ module keccak_2share
   // C[x,z] = A[x,0,z] ^ A[x,1,z] ^ A[x,2,z] ^ A[x,3,z] ^ A[x,4,z]
   // D[x,z] = C[x-1,z] ^ C[x+1,z-1]
   // theta = A[x,y,z] ^ D[x,z]
-  localparam int ThetaIndexX1 [5] = '{4, 0, 1, 2, 3}; // (x-1)%5
-  localparam int ThetaIndexX2 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
+  localparam logic [2:0] ThetaIndexX1 [5] = '{4, 0, 1, 2, 3}; // (x-1)%5
+  localparam logic [2:0] ThetaIndexX2 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
   function automatic box_t theta(box_t state);
     plane_t c;
     plane_t d;
@@ -411,7 +411,7 @@ module keccak_2share
     end
     for (int x = 0 ; x < 5 ; x++) begin
       for (int z = 0 ; z < W ; z++) begin
-        int index_z;
+        logic [L-1:0] index_z;
         index_z = (z == 0) ? W-1 : z-1; // (z+1)%W
         d[x][z] = c[ThetaIndexX1[x]][z] ^ c[ThetaIndexX2[x]][index_z];
       end
@@ -465,7 +465,7 @@ module keccak_2share
   // pi
   // rearrange the position of lanes
   // pi[x,y,z] = state[(x+3y),x,z]
-  localparam int PiRotate [5][5] = '{
+  localparam logic [2:0] PiRotate [5][5] = '{
     //y  0    1    2    3    4     x
     '{   0,   3,   1,   4,   2},// 0
     '{   1,   4,   2,   0,   3},// 1
@@ -485,8 +485,8 @@ module keccak_2share
 
   // chi
   // chi[x,y,z] = state[x,y,z] ^ ((state[x+1,y,z] ^ 1) & state[x+2,y,z])
-  localparam int ChiIndexX1 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
-  localparam int ChiIndexX2 [5] = '{2, 3, 4, 0, 1}; // (x+2)%5
+  localparam logic [2:0] ChiIndexX1 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
+  localparam logic [2:0] ChiIndexX2 [5] = '{2, 3, 4, 0, 1}; // (x+2)%5
   function automatic box_t chi(box_t state);
     box_t result;
     for (int x = 0 ; x < 5 ; x++) begin
