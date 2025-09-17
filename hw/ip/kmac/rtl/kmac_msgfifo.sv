@@ -9,6 +9,7 @@
 `include "prim_assert.sv"
 
 module kmac_msgfifo
+  import prim_mubi_pkg::*;
   import kmac_pkg::*;
 #(
   // OutWidth is MsgFIFO data width. prim_packer converts InW to OutW prior to
@@ -41,7 +42,7 @@ module kmac_msgfifo
   output logic [MsgDepthW-1:0] fifo_depth_o,
 
   // Control
-  input prim_mubi_pkg::mubi4_t clear_i,
+  input mubi4_t clear_i,
 
   // process_i --> process_o
   // process_o asserted after all internal messages are flushed out to MSG interface
@@ -152,7 +153,7 @@ module kmac_msgfifo
   ) u_msgfifo (
     .clk_i,
     .rst_ni,
-    .clr_i   (prim_mubi_pkg::mubi4_test_true_strict(clear_i)),
+    .clr_i   (mubi4_test_true_strict(clear_i)),
 
     .wvalid_i(fifo_wvalid),
     .wready_o(fifo_wready),
@@ -222,7 +223,7 @@ module kmac_msgfifo
       end
 
       FlushClear: begin
-        if (prim_mubi_pkg::mubi4_test_true_strict(clear_i)) begin
+        if (mubi4_test_true_strict(clear_i)) begin
           flush_st_d = FlushIdle;
         end else begin
           flush_st_d = FlushClear;

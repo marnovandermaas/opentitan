@@ -4,9 +4,10 @@
 //
 // Keccak state read
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module kmac_staterd
+  import prim_mubi_pkg::*;
   import kmac_pkg::*;
 #(
   // TL-UL Address Width. Should be bigger than
@@ -25,13 +26,13 @@ module kmac_staterd
   output tlul_pkg::tl_d2h_t tl_o,
 
   // State in
-  input [sha3_pkg::StateW-1:0] state_i [Share],
+  input [ot_sha3_pkg::StateW-1:0] state_i [Share],
 
   // Config
   input endian_swap_i
 );
 
-  localparam int StateAddrW = $clog2(sha3_pkg::StateW/32);
+  localparam int StateAddrW = $clog2(ot_sha3_pkg::StateW/32);
   localparam int SelAddrW   = AddrW-2-StateAddrW;
 
   /////////////
@@ -64,7 +65,7 @@ module kmac_staterd
 
     .tl_i,
     .tl_o,
-    .en_ifetch_i                (prim_mubi_pkg::MuBi4False),
+    .en_ifetch_i                (MuBi4False),
     .req_o                      (tlram_req),
     .req_type_o                 (),
     .gnt_i                      (tlram_gnt),
@@ -73,12 +74,11 @@ module kmac_staterd
     .wdata_o                    (unused_tlram_wdata),
     .wmask_o                    (unused_tlram_wmask),
     .intg_error_o               (),
-    .user_rsvd_o                (),
     .rdata_i                    (tlram_rdata),
     .rvalid_i                   (tlram_rvalid),
     .rerror_i                   (tlram_rerror),
     .compound_txn_in_progress_o (),
-    .readback_en_i              (prim_mubi_pkg::MuBi4False),
+    .readback_en_i              (MuBi4False),
     .readback_error_o           (),
     .wr_collision_i             (1'b0),
     .write_pending_i            (1'b0)
@@ -108,7 +108,7 @@ module kmac_staterd
 
   for (genvar i = 0 ; i < Share ; i++) begin : gen_slicer
     prim_slicer #(
-      .InW (sha3_pkg::StateW),
+      .InW (ot_sha3_pkg::StateW),
       .OutW (32),
       .IndexW (StateAddrW)
     ) u_state_slice (

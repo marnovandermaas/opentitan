@@ -7,6 +7,7 @@
 `include "prim_assert.sv"
 
 module kmac_core
+  import prim_mubi_pkg::*;
   import kmac_pkg::*;
 #(
   // EnMasking: Enable masking security hardening inside keccak_round
@@ -34,8 +35,8 @@ module kmac_core
   // If kmac_en is cleared, Core logic doesn't function but forward incoming
   // message to SHA3 core
   input                             kmac_en_i,
-  input sha3_pkg::sha3_mode_e       mode_i,
-  input sha3_pkg::keccak_strength_e strength_i,
+  input ot_sha3_pkg::sha3_mode_e       mode_i,
+  input ot_sha3_pkg::keccak_strength_e strength_i,
 
   // Key input from CSR
   input [MaxKeyLen-1:0] key_data_i [Share],
@@ -45,7 +46,7 @@ module kmac_core
   // Controls : same to SHA3 core
   input start_i,
   input process_i,
-  input prim_mubi_pkg::mubi4_t done_i,
+  input mubi4_t done_i,
 
   // Control to SHA3 core
   output logic process_o,
@@ -57,14 +58,14 @@ module kmac_core
   output logic key_index_error_o
 );
 
-  import sha3_pkg::KeccakMsgAddrW;
-  import sha3_pkg::KeccakCountW;
-  import sha3_pkg::KeccakRate;
-  import sha3_pkg::L128;
-  import sha3_pkg::L224;
-  import sha3_pkg::L256;
-  import sha3_pkg::L384;
-  import sha3_pkg::L512;
+  import ot_sha3_pkg::KeccakMsgAddrW;
+  import ot_sha3_pkg::KeccakCountW;
+  import ot_sha3_pkg::KeccakRate;
+  import ot_sha3_pkg::L128;
+  import ot_sha3_pkg::L224;
+  import ot_sha3_pkg::L256;
+  import ot_sha3_pkg::L384;
+  import ot_sha3_pkg::L512;
 
   /////////////////
   // Definitions //
@@ -120,12 +121,12 @@ module kmac_core
 
   // Key slice address
   // This signal controls the 64 bit output of the sliced secret_key.
-  logic [sha3_pkg::KeccakMsgAddrW-1:0] key_index;
+  logic [ot_sha3_pkg::KeccakMsgAddrW-1:0] key_index;
   logic inc_keyidx, clr_keyidx;
 
   // `sent_blocksize` indicates that the encoded key is sent to sha3 hashing
   // engine. If this hits at StKey stage, the state moves to message state.
-  logic [sha3_pkg::KeccakCountW-1:0] block_addr_limit;
+  logic [ot_sha3_pkg::KeccakCountW-1:0] block_addr_limit;
   logic sent_blocksize;
 
   // Internal message signals
@@ -214,7 +215,7 @@ module kmac_core
       end
 
       StKmacFlush: begin
-        if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+        if (mubi4_test_true_strict(done_i)) begin
           st_d = StKmacIdle;
         end else begin
           st_d = StKmacFlush;
@@ -270,7 +271,7 @@ module kmac_core
     end else if (process_i && !process_o) begin
       process_latched <= 1'b 1;
     end else if (process_o ||
-      prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+      mubi4_test_true_strict(done_i)) begin
       process_latched <= 1'b 0;
     end
   end
@@ -284,7 +285,7 @@ module kmac_core
 
   // left_encode(w): Same as used in sha3pad logic.
   logic [15:0] encode_bytepad;
-  assign encode_bytepad = sha3_pkg::encode_bytepad_len(strength_i);
+  assign encode_bytepad = ot_sha3_pkg::encode_bytepad_len(strength_i);
 
   // left_encode(len(secret_key))
   // encoded length is always byte size. Use MaxEncodedKeyLenByte parameter
@@ -396,7 +397,7 @@ module kmac_core
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
   prim_count #(
-    .Width(sha3_pkg::KeccakMsgAddrW)
+    .Width(ot_sha3_pkg::KeccakMsgAddrW)
   ) u_key_index_count (
     .clk_i,
     .rst_ni,
@@ -405,7 +406,7 @@ module kmac_core
     .set_cnt_i('0),
     .incr_en_i(inc_keyidx),
     .decr_en_i(1'b0),
-    .step_i(sha3_pkg::KeccakMsgAddrW'(1)),
+    .step_i(ot_sha3_pkg::KeccakMsgAddrW'(1)),
     .commit_i(1'b1),
     .cnt_o(key_index),
     .cnt_after_commit_o(),

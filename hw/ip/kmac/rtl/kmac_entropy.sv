@@ -7,6 +7,7 @@
 `include "prim_assert.sv"
 
 module kmac_entropy
+  import prim_mubi_pkg::*;
   import kmac_pkg::*;
   import kmac_reg_pkg::*;
 #(
@@ -25,7 +26,7 @@ module kmac_entropy
   // Entropy to internal
   output logic                          rand_valid_o,
   output logic                          rand_early_o,
-  output logic [sha3_pkg::StateW/2-1:0] rand_data_o,
+  output logic [ot_sha3_pkg::StateW/2-1:0] rand_data_o,
   output logic                          rand_aux_o,
   input                                 rand_update_i,
   input                                 rand_consumed_i,
@@ -69,7 +70,7 @@ module kmac_entropy
   input                       hash_cnt_clr_i,
   input        [HashCntW-1:0] hash_threshold_i,
 
-  output prim_mubi_pkg::mubi4_t entropy_configured_o,
+  output mubi4_t entropy_configured_o,
 
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
@@ -224,7 +225,7 @@ module kmac_entropy
   entropy_mode_e mode_q;
 
   // Status out: entropy configured
-  prim_mubi_pkg::mubi4_t entropy_configured;
+  mubi4_t entropy_configured;
 
   // Internal entropy request signals.
   logic entropy_req;
@@ -740,8 +741,8 @@ module kmac_entropy
   // mubi4 sender
 
   assign entropy_configured = (st != StRandReset)
-                            ? prim_mubi_pkg::MuBi4True
-                            : prim_mubi_pkg::MuBi4False ;
+                            ? MuBi4True
+                            : MuBi4False ;
   prim_mubi4_sender #(
     .AsyncOn(1'b0)
   ) u_entropy_configured (

@@ -44,9 +44,10 @@
 `include "prim_assert.sv"
 
 module kmac_errchk
+  import prim_mubi_pkg::*;
   import kmac_pkg::*;
-  import sha3_pkg::sha3_mode_e;
-  import sha3_pkg::keccak_strength_e;
+  import ot_sha3_pkg::sha3_mode_e;
+  import ot_sha3_pkg::keccak_strength_e;
 #(
   parameter bit EnMasking = 1'b 1
 ) (
@@ -75,7 +76,7 @@ module kmac_errchk
   input app_active_i,
 
   // Status from SHA3 core
-  input prim_mubi_pkg::mubi4_t sha3_absorbed_i,
+  input mubi4_t sha3_absorbed_i,
   input keccak_done_i,
 
   // Life cycle
@@ -84,23 +85,23 @@ module kmac_errchk
   // Error processed indicator
   input err_processed_i,
 
-  input prim_mubi_pkg::mubi4_t clear_after_error_i,
+  input mubi4_t clear_after_error_i,
 
   output err_t error_o,
   output logic sparse_fsm_error_o
 );
 
-  // sha3_pkg::sha3_mode_e
-  import sha3_pkg::L128;
-  import sha3_pkg::L224;
-  import sha3_pkg::L256;
-  import sha3_pkg::L384;
-  import sha3_pkg::L512;
+  // ot_sha3_pkg::sha3_mode_e
+  import ot_sha3_pkg::L128;
+  import ot_sha3_pkg::L224;
+  import ot_sha3_pkg::L256;
+  import ot_sha3_pkg::L384;
+  import ot_sha3_pkg::L512;
 
-  // sha3_pkg::keccak_strength_e
-  import sha3_pkg::Sha3;
-  import sha3_pkg::Shake;
-  import sha3_pkg::CShake;
+  // ot_sha3_pkg::keccak_strength_e
+  import ot_sha3_pkg::Sha3;
+  import ot_sha3_pkg::Shake;
+  import ot_sha3_pkg::CShake;
 
   /////////////////
   // Definitions //
@@ -423,7 +424,7 @@ module kmac_errchk
       end
 
       StProcessing: begin
-        if (prim_mubi_pkg::mubi4_test_true_strict(sha3_absorbed_i)) begin
+        if (mubi4_test_true_strict(sha3_absorbed_i)) begin
           st_d = StAbsorbed;
         end
       end
@@ -461,7 +462,7 @@ module kmac_errchk
     end
 
     if (st_d != StTerminalError &&
-        prim_mubi_pkg::mubi4_test_true_strict(clear_after_error_i)) begin
+        mubi4_test_true_strict(clear_after_error_i)) begin
       st_d = StIdle;
     end
   end : next_state
