@@ -61,9 +61,9 @@ module kmac_reg_top (
 
   // also check for spurious write enables
   logic reg_we_err;
-  logic [19:0] reg_we_check;
+  logic [56:0] reg_we_check;
   prim_reg_we_check #(
-    .OneHotWidth(20)
+    .OneHotWidth(57)
   ) u_prim_reg_we_check (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
@@ -201,6 +201,10 @@ module kmac_reg_top (
   logic cfg_regwen_qs;
   logic cfg_shadowed_re;
   logic cfg_shadowed_we;
+  logic cfg_shadowed_kmac_en_qs;
+  logic cfg_shadowed_kmac_en_wd;
+  logic cfg_shadowed_kmac_en_storage_err;
+  logic cfg_shadowed_kmac_en_update_err;
   logic [2:0] cfg_shadowed_kstrength_qs;
   logic [2:0] cfg_shadowed_kstrength_wd;
   logic cfg_shadowed_kstrength_storage_err;
@@ -217,8 +221,34 @@ module kmac_reg_top (
   logic cfg_shadowed_state_endianness_wd;
   logic cfg_shadowed_state_endianness_storage_err;
   logic cfg_shadowed_state_endianness_update_err;
+  logic cfg_shadowed_sideload_qs;
+  logic cfg_shadowed_sideload_wd;
+  logic cfg_shadowed_sideload_storage_err;
+  logic cfg_shadowed_sideload_update_err;
+  logic [1:0] cfg_shadowed_entropy_mode_qs;
+  logic [1:0] cfg_shadowed_entropy_mode_wd;
+  logic cfg_shadowed_entropy_mode_storage_err;
+  logic cfg_shadowed_entropy_mode_update_err;
+  logic cfg_shadowed_entropy_fast_process_qs;
+  logic cfg_shadowed_entropy_fast_process_wd;
+  logic cfg_shadowed_entropy_fast_process_storage_err;
+  logic cfg_shadowed_entropy_fast_process_update_err;
+  logic cfg_shadowed_msg_mask_qs;
+  logic cfg_shadowed_msg_mask_wd;
+  logic cfg_shadowed_msg_mask_storage_err;
+  logic cfg_shadowed_msg_mask_update_err;
+  logic cfg_shadowed_entropy_ready_qs;
+  logic cfg_shadowed_entropy_ready_wd;
+  logic cfg_shadowed_entropy_ready_storage_err;
+  logic cfg_shadowed_entropy_ready_update_err;
+  logic cfg_shadowed_en_unsupported_modestrength_qs;
+  logic cfg_shadowed_en_unsupported_modestrength_wd;
+  logic cfg_shadowed_en_unsupported_modestrength_storage_err;
+  logic cfg_shadowed_en_unsupported_modestrength_update_err;
   logic cmd_we;
   logic [5:0] cmd_cmd_wd;
+  logic cmd_entropy_req_wd;
+  logic cmd_hash_cnt_clr_wd;
   logic cmd_err_processed_wd;
   logic status_re;
   logic status_sha3_idle_qs;
@@ -229,6 +259,86 @@ module kmac_reg_top (
   logic status_fifo_full_qs;
   logic status_alert_fatal_fault_qs;
   logic status_alert_recov_ctrl_update_err_qs;
+  logic entropy_period_we;
+  logic [9:0] entropy_period_prescaler_qs;
+  logic [9:0] entropy_period_prescaler_wd;
+  logic [15:0] entropy_period_wait_timer_qs;
+  logic [15:0] entropy_period_wait_timer_wd;
+  logic [9:0] entropy_refresh_hash_cnt_qs;
+  logic entropy_refresh_threshold_shadowed_re;
+  logic entropy_refresh_threshold_shadowed_we;
+  logic [9:0] entropy_refresh_threshold_shadowed_qs;
+  logic [9:0] entropy_refresh_threshold_shadowed_wd;
+  logic entropy_refresh_threshold_shadowed_storage_err;
+  logic entropy_refresh_threshold_shadowed_update_err;
+  logic entropy_seed_we;
+  logic [31:0] entropy_seed_wd;
+  logic key_share0_0_we;
+  logic [31:0] key_share0_0_wd;
+  logic key_share0_1_we;
+  logic [31:0] key_share0_1_wd;
+  logic key_share0_2_we;
+  logic [31:0] key_share0_2_wd;
+  logic key_share0_3_we;
+  logic [31:0] key_share0_3_wd;
+  logic key_share0_4_we;
+  logic [31:0] key_share0_4_wd;
+  logic key_share0_5_we;
+  logic [31:0] key_share0_5_wd;
+  logic key_share0_6_we;
+  logic [31:0] key_share0_6_wd;
+  logic key_share0_7_we;
+  logic [31:0] key_share0_7_wd;
+  logic key_share0_8_we;
+  logic [31:0] key_share0_8_wd;
+  logic key_share0_9_we;
+  logic [31:0] key_share0_9_wd;
+  logic key_share0_10_we;
+  logic [31:0] key_share0_10_wd;
+  logic key_share0_11_we;
+  logic [31:0] key_share0_11_wd;
+  logic key_share0_12_we;
+  logic [31:0] key_share0_12_wd;
+  logic key_share0_13_we;
+  logic [31:0] key_share0_13_wd;
+  logic key_share0_14_we;
+  logic [31:0] key_share0_14_wd;
+  logic key_share0_15_we;
+  logic [31:0] key_share0_15_wd;
+  logic key_share1_0_we;
+  logic [31:0] key_share1_0_wd;
+  logic key_share1_1_we;
+  logic [31:0] key_share1_1_wd;
+  logic key_share1_2_we;
+  logic [31:0] key_share1_2_wd;
+  logic key_share1_3_we;
+  logic [31:0] key_share1_3_wd;
+  logic key_share1_4_we;
+  logic [31:0] key_share1_4_wd;
+  logic key_share1_5_we;
+  logic [31:0] key_share1_5_wd;
+  logic key_share1_6_we;
+  logic [31:0] key_share1_6_wd;
+  logic key_share1_7_we;
+  logic [31:0] key_share1_7_wd;
+  logic key_share1_8_we;
+  logic [31:0] key_share1_8_wd;
+  logic key_share1_9_we;
+  logic [31:0] key_share1_9_wd;
+  logic key_share1_10_we;
+  logic [31:0] key_share1_10_wd;
+  logic key_share1_11_we;
+  logic [31:0] key_share1_11_wd;
+  logic key_share1_12_we;
+  logic [31:0] key_share1_12_wd;
+  logic key_share1_13_we;
+  logic [31:0] key_share1_13_wd;
+  logic key_share1_14_we;
+  logic [31:0] key_share1_14_wd;
+  logic key_share1_15_we;
+  logic [31:0] key_share1_15_wd;
+  logic key_len_we;
+  logic [2:0] key_len_wd;
   logic prefix_0_we;
   logic [31:0] prefix_0_qs;
   logic [31:0] prefix_0_wd;
@@ -539,7 +649,7 @@ module kmac_reg_top (
 
   // R[cfg_shadowed]: V(False)
   logic cfg_shadowed_qe;
-  logic [3:0] cfg_shadowed_flds_we;
+  logic [10:0] cfg_shadowed_flds_we;
   prim_flop #(
     .Width(1),
     .ResetValue(0)
@@ -552,6 +662,43 @@ module kmac_reg_top (
   // Create REGWEN-gated WE signal
   logic cfg_shadowed_gated_we;
   assign cfg_shadowed_gated_we = cfg_shadowed_we & cfg_regwen_qs;
+  //   F[kmac_en]: 0:0
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_kmac_en (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_kmac_en_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[0]),
+    .q      (reg2hw.cfg_shadowed.kmac_en.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_kmac_en_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_kmac_en_update_err),
+    .err_storage (cfg_shadowed_kmac_en_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.kmac_en.qe = cfg_shadowed_qe;
+
   //   F[kstrength]: 3:1
   prim_subreg_shadow #(
     .DW      (3),
@@ -573,7 +720,7 @@ module kmac_reg_top (
     .d      ('0),
 
     // to internal hardware
-    .qe     (cfg_shadowed_flds_we[0]),
+    .qe     (cfg_shadowed_flds_we[1]),
     .q      (reg2hw.cfg_shadowed.kstrength.q),
     .ds     (),
 
@@ -610,7 +757,7 @@ module kmac_reg_top (
     .d      ('0),
 
     // to internal hardware
-    .qe     (cfg_shadowed_flds_we[1]),
+    .qe     (cfg_shadowed_flds_we[2]),
     .q      (reg2hw.cfg_shadowed.mode.q),
     .ds     (),
 
@@ -647,7 +794,7 @@ module kmac_reg_top (
     .d      ('0),
 
     // to internal hardware
-    .qe     (cfg_shadowed_flds_we[2]),
+    .qe     (cfg_shadowed_flds_we[3]),
     .q      (reg2hw.cfg_shadowed.msg_endianness.q),
     .ds     (),
 
@@ -684,7 +831,7 @@ module kmac_reg_top (
     .d      ('0),
 
     // to internal hardware
-    .qe     (cfg_shadowed_flds_we[3]),
+    .qe     (cfg_shadowed_flds_we[4]),
     .q      (reg2hw.cfg_shadowed.state_endianness.q),
     .ds     (),
 
@@ -700,10 +847,232 @@ module kmac_reg_top (
   );
   assign reg2hw.cfg_shadowed.state_endianness.qe = cfg_shadowed_qe;
 
+  //   F[sideload]: 12:12
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_sideload (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_sideload_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[5]),
+    .q      (reg2hw.cfg_shadowed.sideload.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_sideload_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_sideload_update_err),
+    .err_storage (cfg_shadowed_sideload_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.sideload.qe = cfg_shadowed_qe;
+
+  //   F[entropy_mode]: 17:16
+  prim_subreg_shadow #(
+    .DW      (2),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (2'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_entropy_mode (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_entropy_mode_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[6]),
+    .q      (reg2hw.cfg_shadowed.entropy_mode.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_entropy_mode_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_entropy_mode_update_err),
+    .err_storage (cfg_shadowed_entropy_mode_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.entropy_mode.qe = cfg_shadowed_qe;
+
+  //   F[entropy_fast_process]: 19:19
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_entropy_fast_process (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_entropy_fast_process_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[7]),
+    .q      (reg2hw.cfg_shadowed.entropy_fast_process.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_entropy_fast_process_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_entropy_fast_process_update_err),
+    .err_storage (cfg_shadowed_entropy_fast_process_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.entropy_fast_process.qe = cfg_shadowed_qe;
+
+  //   F[msg_mask]: 20:20
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_msg_mask (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_msg_mask_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[8]),
+    .q      (reg2hw.cfg_shadowed.msg_mask.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_msg_mask_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_msg_mask_update_err),
+    .err_storage (cfg_shadowed_msg_mask_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.msg_mask.qe = cfg_shadowed_qe;
+
+  //   F[entropy_ready]: 24:24
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_entropy_ready (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_entropy_ready_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[9]),
+    .q      (reg2hw.cfg_shadowed.entropy_ready.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_entropy_ready_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_entropy_ready_update_err),
+    .err_storage (cfg_shadowed_entropy_ready_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.entropy_ready.qe = cfg_shadowed_qe;
+
+  //   F[en_unsupported_modestrength]: 26:26
+  prim_subreg_shadow #(
+    .DW      (1),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
+  ) u_cfg_shadowed_en_unsupported_modestrength (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (cfg_shadowed_re),
+    .we     (cfg_shadowed_gated_we),
+    .wd     (cfg_shadowed_en_unsupported_modestrength_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (cfg_shadowed_flds_we[10]),
+    .q      (reg2hw.cfg_shadowed.en_unsupported_modestrength.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (cfg_shadowed_en_unsupported_modestrength_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (cfg_shadowed_en_unsupported_modestrength_update_err),
+    .err_storage (cfg_shadowed_en_unsupported_modestrength_storage_err)
+  );
+  assign reg2hw.cfg_shadowed.en_unsupported_modestrength.qe = cfg_shadowed_qe;
+
 
   // R[cmd]: V(True)
   logic cmd_qe;
-  logic [1:0] cmd_flds_we;
+  logic [3:0] cmd_flds_we;
   assign cmd_qe = &cmd_flds_we;
   //   F[cmd]: 5:0
   prim_subreg_ext #(
@@ -721,6 +1090,38 @@ module kmac_reg_top (
   );
   assign reg2hw.cmd.cmd.qe = cmd_qe;
 
+  //   F[entropy_req]: 8:8
+  prim_subreg_ext #(
+    .DW    (1)
+  ) u_cmd_entropy_req (
+    .re     (1'b0),
+    .we     (cmd_we),
+    .wd     (cmd_entropy_req_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (cmd_flds_we[1]),
+    .q      (reg2hw.cmd.entropy_req.q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.cmd.entropy_req.qe = cmd_qe;
+
+  //   F[hash_cnt_clr]: 9:9
+  prim_subreg_ext #(
+    .DW    (1)
+  ) u_cmd_hash_cnt_clr (
+    .re     (1'b0),
+    .we     (cmd_we),
+    .wd     (cmd_hash_cnt_clr_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (cmd_flds_we[2]),
+    .q      (reg2hw.cmd.hash_cnt_clr.q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.cmd.hash_cnt_clr.qe = cmd_qe;
+
   //   F[err_processed]: 10:10
   prim_subreg_ext #(
     .DW    (1)
@@ -730,7 +1131,7 @@ module kmac_reg_top (
     .wd     (cmd_err_processed_wd),
     .d      ('0),
     .qre    (),
-    .qe     (cmd_flds_we[1]),
+    .qe     (cmd_flds_we[3]),
     .q      (reg2hw.cmd.err_processed.q),
     .ds     (),
     .qs     ()
@@ -857,6 +1258,953 @@ module kmac_reg_top (
     .q      (),
     .ds     (),
     .qs     (status_alert_recov_ctrl_update_err_qs)
+  );
+
+
+  // R[entropy_period]: V(False)
+  // Create REGWEN-gated WE signal
+  logic entropy_period_gated_we;
+  assign entropy_period_gated_we = entropy_period_we & cfg_regwen_qs;
+  //   F[prescaler]: 9:0
+  prim_subreg #(
+    .DW      (10),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (10'h0),
+    .Mubi    (1'b0)
+  ) u_entropy_period_prescaler (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (entropy_period_gated_we),
+    .wd     (entropy_period_prescaler_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.entropy_period.prescaler.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (entropy_period_prescaler_qs)
+  );
+
+  //   F[wait_timer]: 31:16
+  prim_subreg #(
+    .DW      (16),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (16'h0),
+    .Mubi    (1'b0)
+  ) u_entropy_period_wait_timer (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (entropy_period_gated_we),
+    .wd     (entropy_period_wait_timer_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.entropy_period.wait_timer.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (entropy_period_wait_timer_qs)
+  );
+
+
+  // R[entropy_refresh_hash_cnt]: V(False)
+  prim_subreg #(
+    .DW      (10),
+    .SwAccess(prim_subreg_pkg::SwAccessRO),
+    .RESVAL  (10'h0),
+    .Mubi    (1'b0)
+  ) u_entropy_refresh_hash_cnt (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.entropy_refresh_hash_cnt.de),
+    .d      (hw2reg.entropy_refresh_hash_cnt.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (entropy_refresh_hash_cnt_qs)
+  );
+
+
+  // R[entropy_refresh_threshold_shadowed]: V(False)
+  // Create REGWEN-gated WE signal
+  logic entropy_refresh_threshold_shadowed_gated_we;
+  assign entropy_refresh_threshold_shadowed_gated_we =
+    entropy_refresh_threshold_shadowed_we & cfg_regwen_qs;
+  prim_subreg_shadow #(
+    .DW      (10),
+    .SwAccess(prim_subreg_pkg::SwAccessRW),
+    .RESVAL  (10'h0),
+    .Mubi    (1'b0)
+  ) u_entropy_refresh_threshold_shadowed (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+    .rst_shadowed_ni (rst_shadowed_ni),
+
+    // from register interface
+    .re     (entropy_refresh_threshold_shadowed_re),
+    .we     (entropy_refresh_threshold_shadowed_gated_we),
+    .wd     (entropy_refresh_threshold_shadowed_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.entropy_refresh_threshold_shadowed.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     (entropy_refresh_threshold_shadowed_qs),
+
+    // Shadow register phase. Relevant for hwext only.
+    .phase  (),
+
+    // Shadow register error conditions
+    .err_update  (entropy_refresh_threshold_shadowed_update_err),
+    .err_storage (entropy_refresh_threshold_shadowed_storage_err)
+  );
+
+
+  // R[entropy_seed]: V(True)
+  logic entropy_seed_qe;
+  logic [0:0] entropy_seed_flds_we;
+  assign entropy_seed_qe = &entropy_seed_flds_we;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_entropy_seed (
+    .re     (1'b0),
+    .we     (entropy_seed_we),
+    .wd     (entropy_seed_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (entropy_seed_flds_we[0]),
+    .q      (reg2hw.entropy_seed.q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.entropy_seed.qe = entropy_seed_qe;
+
+
+  // Subregister 0 of Multireg key_share0
+  // R[key_share0_0]: V(True)
+  logic key_share0_0_qe;
+  logic [0:0] key_share0_0_flds_we;
+  assign key_share0_0_qe = &key_share0_0_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_0_gated_we;
+  assign key_share0_0_gated_we = key_share0_0_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_0 (
+    .re     (1'b0),
+    .we     (key_share0_0_gated_we),
+    .wd     (key_share0_0_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_0_flds_we[0]),
+    .q      (reg2hw.key_share0[0].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[0].qe = key_share0_0_qe;
+
+
+  // Subregister 1 of Multireg key_share0
+  // R[key_share0_1]: V(True)
+  logic key_share0_1_qe;
+  logic [0:0] key_share0_1_flds_we;
+  assign key_share0_1_qe = &key_share0_1_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_1_gated_we;
+  assign key_share0_1_gated_we = key_share0_1_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_1 (
+    .re     (1'b0),
+    .we     (key_share0_1_gated_we),
+    .wd     (key_share0_1_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_1_flds_we[0]),
+    .q      (reg2hw.key_share0[1].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[1].qe = key_share0_1_qe;
+
+
+  // Subregister 2 of Multireg key_share0
+  // R[key_share0_2]: V(True)
+  logic key_share0_2_qe;
+  logic [0:0] key_share0_2_flds_we;
+  assign key_share0_2_qe = &key_share0_2_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_2_gated_we;
+  assign key_share0_2_gated_we = key_share0_2_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_2 (
+    .re     (1'b0),
+    .we     (key_share0_2_gated_we),
+    .wd     (key_share0_2_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_2_flds_we[0]),
+    .q      (reg2hw.key_share0[2].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[2].qe = key_share0_2_qe;
+
+
+  // Subregister 3 of Multireg key_share0
+  // R[key_share0_3]: V(True)
+  logic key_share0_3_qe;
+  logic [0:0] key_share0_3_flds_we;
+  assign key_share0_3_qe = &key_share0_3_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_3_gated_we;
+  assign key_share0_3_gated_we = key_share0_3_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_3 (
+    .re     (1'b0),
+    .we     (key_share0_3_gated_we),
+    .wd     (key_share0_3_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_3_flds_we[0]),
+    .q      (reg2hw.key_share0[3].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[3].qe = key_share0_3_qe;
+
+
+  // Subregister 4 of Multireg key_share0
+  // R[key_share0_4]: V(True)
+  logic key_share0_4_qe;
+  logic [0:0] key_share0_4_flds_we;
+  assign key_share0_4_qe = &key_share0_4_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_4_gated_we;
+  assign key_share0_4_gated_we = key_share0_4_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_4 (
+    .re     (1'b0),
+    .we     (key_share0_4_gated_we),
+    .wd     (key_share0_4_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_4_flds_we[0]),
+    .q      (reg2hw.key_share0[4].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[4].qe = key_share0_4_qe;
+
+
+  // Subregister 5 of Multireg key_share0
+  // R[key_share0_5]: V(True)
+  logic key_share0_5_qe;
+  logic [0:0] key_share0_5_flds_we;
+  assign key_share0_5_qe = &key_share0_5_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_5_gated_we;
+  assign key_share0_5_gated_we = key_share0_5_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_5 (
+    .re     (1'b0),
+    .we     (key_share0_5_gated_we),
+    .wd     (key_share0_5_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_5_flds_we[0]),
+    .q      (reg2hw.key_share0[5].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[5].qe = key_share0_5_qe;
+
+
+  // Subregister 6 of Multireg key_share0
+  // R[key_share0_6]: V(True)
+  logic key_share0_6_qe;
+  logic [0:0] key_share0_6_flds_we;
+  assign key_share0_6_qe = &key_share0_6_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_6_gated_we;
+  assign key_share0_6_gated_we = key_share0_6_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_6 (
+    .re     (1'b0),
+    .we     (key_share0_6_gated_we),
+    .wd     (key_share0_6_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_6_flds_we[0]),
+    .q      (reg2hw.key_share0[6].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[6].qe = key_share0_6_qe;
+
+
+  // Subregister 7 of Multireg key_share0
+  // R[key_share0_7]: V(True)
+  logic key_share0_7_qe;
+  logic [0:0] key_share0_7_flds_we;
+  assign key_share0_7_qe = &key_share0_7_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_7_gated_we;
+  assign key_share0_7_gated_we = key_share0_7_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_7 (
+    .re     (1'b0),
+    .we     (key_share0_7_gated_we),
+    .wd     (key_share0_7_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_7_flds_we[0]),
+    .q      (reg2hw.key_share0[7].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[7].qe = key_share0_7_qe;
+
+
+  // Subregister 8 of Multireg key_share0
+  // R[key_share0_8]: V(True)
+  logic key_share0_8_qe;
+  logic [0:0] key_share0_8_flds_we;
+  assign key_share0_8_qe = &key_share0_8_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_8_gated_we;
+  assign key_share0_8_gated_we = key_share0_8_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_8 (
+    .re     (1'b0),
+    .we     (key_share0_8_gated_we),
+    .wd     (key_share0_8_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_8_flds_we[0]),
+    .q      (reg2hw.key_share0[8].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[8].qe = key_share0_8_qe;
+
+
+  // Subregister 9 of Multireg key_share0
+  // R[key_share0_9]: V(True)
+  logic key_share0_9_qe;
+  logic [0:0] key_share0_9_flds_we;
+  assign key_share0_9_qe = &key_share0_9_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_9_gated_we;
+  assign key_share0_9_gated_we = key_share0_9_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_9 (
+    .re     (1'b0),
+    .we     (key_share0_9_gated_we),
+    .wd     (key_share0_9_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_9_flds_we[0]),
+    .q      (reg2hw.key_share0[9].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[9].qe = key_share0_9_qe;
+
+
+  // Subregister 10 of Multireg key_share0
+  // R[key_share0_10]: V(True)
+  logic key_share0_10_qe;
+  logic [0:0] key_share0_10_flds_we;
+  assign key_share0_10_qe = &key_share0_10_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_10_gated_we;
+  assign key_share0_10_gated_we = key_share0_10_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_10 (
+    .re     (1'b0),
+    .we     (key_share0_10_gated_we),
+    .wd     (key_share0_10_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_10_flds_we[0]),
+    .q      (reg2hw.key_share0[10].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[10].qe = key_share0_10_qe;
+
+
+  // Subregister 11 of Multireg key_share0
+  // R[key_share0_11]: V(True)
+  logic key_share0_11_qe;
+  logic [0:0] key_share0_11_flds_we;
+  assign key_share0_11_qe = &key_share0_11_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_11_gated_we;
+  assign key_share0_11_gated_we = key_share0_11_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_11 (
+    .re     (1'b0),
+    .we     (key_share0_11_gated_we),
+    .wd     (key_share0_11_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_11_flds_we[0]),
+    .q      (reg2hw.key_share0[11].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[11].qe = key_share0_11_qe;
+
+
+  // Subregister 12 of Multireg key_share0
+  // R[key_share0_12]: V(True)
+  logic key_share0_12_qe;
+  logic [0:0] key_share0_12_flds_we;
+  assign key_share0_12_qe = &key_share0_12_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_12_gated_we;
+  assign key_share0_12_gated_we = key_share0_12_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_12 (
+    .re     (1'b0),
+    .we     (key_share0_12_gated_we),
+    .wd     (key_share0_12_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_12_flds_we[0]),
+    .q      (reg2hw.key_share0[12].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[12].qe = key_share0_12_qe;
+
+
+  // Subregister 13 of Multireg key_share0
+  // R[key_share0_13]: V(True)
+  logic key_share0_13_qe;
+  logic [0:0] key_share0_13_flds_we;
+  assign key_share0_13_qe = &key_share0_13_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_13_gated_we;
+  assign key_share0_13_gated_we = key_share0_13_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_13 (
+    .re     (1'b0),
+    .we     (key_share0_13_gated_we),
+    .wd     (key_share0_13_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_13_flds_we[0]),
+    .q      (reg2hw.key_share0[13].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[13].qe = key_share0_13_qe;
+
+
+  // Subregister 14 of Multireg key_share0
+  // R[key_share0_14]: V(True)
+  logic key_share0_14_qe;
+  logic [0:0] key_share0_14_flds_we;
+  assign key_share0_14_qe = &key_share0_14_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_14_gated_we;
+  assign key_share0_14_gated_we = key_share0_14_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_14 (
+    .re     (1'b0),
+    .we     (key_share0_14_gated_we),
+    .wd     (key_share0_14_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_14_flds_we[0]),
+    .q      (reg2hw.key_share0[14].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[14].qe = key_share0_14_qe;
+
+
+  // Subregister 15 of Multireg key_share0
+  // R[key_share0_15]: V(True)
+  logic key_share0_15_qe;
+  logic [0:0] key_share0_15_flds_we;
+  assign key_share0_15_qe = &key_share0_15_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share0_15_gated_we;
+  assign key_share0_15_gated_we = key_share0_15_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share0_15 (
+    .re     (1'b0),
+    .we     (key_share0_15_gated_we),
+    .wd     (key_share0_15_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share0_15_flds_we[0]),
+    .q      (reg2hw.key_share0[15].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share0[15].qe = key_share0_15_qe;
+
+
+  // Subregister 0 of Multireg key_share1
+  // R[key_share1_0]: V(True)
+  logic key_share1_0_qe;
+  logic [0:0] key_share1_0_flds_we;
+  assign key_share1_0_qe = &key_share1_0_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_0_gated_we;
+  assign key_share1_0_gated_we = key_share1_0_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_0 (
+    .re     (1'b0),
+    .we     (key_share1_0_gated_we),
+    .wd     (key_share1_0_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_0_flds_we[0]),
+    .q      (reg2hw.key_share1[0].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[0].qe = key_share1_0_qe;
+
+
+  // Subregister 1 of Multireg key_share1
+  // R[key_share1_1]: V(True)
+  logic key_share1_1_qe;
+  logic [0:0] key_share1_1_flds_we;
+  assign key_share1_1_qe = &key_share1_1_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_1_gated_we;
+  assign key_share1_1_gated_we = key_share1_1_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_1 (
+    .re     (1'b0),
+    .we     (key_share1_1_gated_we),
+    .wd     (key_share1_1_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_1_flds_we[0]),
+    .q      (reg2hw.key_share1[1].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[1].qe = key_share1_1_qe;
+
+
+  // Subregister 2 of Multireg key_share1
+  // R[key_share1_2]: V(True)
+  logic key_share1_2_qe;
+  logic [0:0] key_share1_2_flds_we;
+  assign key_share1_2_qe = &key_share1_2_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_2_gated_we;
+  assign key_share1_2_gated_we = key_share1_2_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_2 (
+    .re     (1'b0),
+    .we     (key_share1_2_gated_we),
+    .wd     (key_share1_2_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_2_flds_we[0]),
+    .q      (reg2hw.key_share1[2].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[2].qe = key_share1_2_qe;
+
+
+  // Subregister 3 of Multireg key_share1
+  // R[key_share1_3]: V(True)
+  logic key_share1_3_qe;
+  logic [0:0] key_share1_3_flds_we;
+  assign key_share1_3_qe = &key_share1_3_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_3_gated_we;
+  assign key_share1_3_gated_we = key_share1_3_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_3 (
+    .re     (1'b0),
+    .we     (key_share1_3_gated_we),
+    .wd     (key_share1_3_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_3_flds_we[0]),
+    .q      (reg2hw.key_share1[3].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[3].qe = key_share1_3_qe;
+
+
+  // Subregister 4 of Multireg key_share1
+  // R[key_share1_4]: V(True)
+  logic key_share1_4_qe;
+  logic [0:0] key_share1_4_flds_we;
+  assign key_share1_4_qe = &key_share1_4_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_4_gated_we;
+  assign key_share1_4_gated_we = key_share1_4_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_4 (
+    .re     (1'b0),
+    .we     (key_share1_4_gated_we),
+    .wd     (key_share1_4_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_4_flds_we[0]),
+    .q      (reg2hw.key_share1[4].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[4].qe = key_share1_4_qe;
+
+
+  // Subregister 5 of Multireg key_share1
+  // R[key_share1_5]: V(True)
+  logic key_share1_5_qe;
+  logic [0:0] key_share1_5_flds_we;
+  assign key_share1_5_qe = &key_share1_5_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_5_gated_we;
+  assign key_share1_5_gated_we = key_share1_5_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_5 (
+    .re     (1'b0),
+    .we     (key_share1_5_gated_we),
+    .wd     (key_share1_5_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_5_flds_we[0]),
+    .q      (reg2hw.key_share1[5].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[5].qe = key_share1_5_qe;
+
+
+  // Subregister 6 of Multireg key_share1
+  // R[key_share1_6]: V(True)
+  logic key_share1_6_qe;
+  logic [0:0] key_share1_6_flds_we;
+  assign key_share1_6_qe = &key_share1_6_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_6_gated_we;
+  assign key_share1_6_gated_we = key_share1_6_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_6 (
+    .re     (1'b0),
+    .we     (key_share1_6_gated_we),
+    .wd     (key_share1_6_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_6_flds_we[0]),
+    .q      (reg2hw.key_share1[6].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[6].qe = key_share1_6_qe;
+
+
+  // Subregister 7 of Multireg key_share1
+  // R[key_share1_7]: V(True)
+  logic key_share1_7_qe;
+  logic [0:0] key_share1_7_flds_we;
+  assign key_share1_7_qe = &key_share1_7_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_7_gated_we;
+  assign key_share1_7_gated_we = key_share1_7_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_7 (
+    .re     (1'b0),
+    .we     (key_share1_7_gated_we),
+    .wd     (key_share1_7_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_7_flds_we[0]),
+    .q      (reg2hw.key_share1[7].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[7].qe = key_share1_7_qe;
+
+
+  // Subregister 8 of Multireg key_share1
+  // R[key_share1_8]: V(True)
+  logic key_share1_8_qe;
+  logic [0:0] key_share1_8_flds_we;
+  assign key_share1_8_qe = &key_share1_8_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_8_gated_we;
+  assign key_share1_8_gated_we = key_share1_8_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_8 (
+    .re     (1'b0),
+    .we     (key_share1_8_gated_we),
+    .wd     (key_share1_8_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_8_flds_we[0]),
+    .q      (reg2hw.key_share1[8].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[8].qe = key_share1_8_qe;
+
+
+  // Subregister 9 of Multireg key_share1
+  // R[key_share1_9]: V(True)
+  logic key_share1_9_qe;
+  logic [0:0] key_share1_9_flds_we;
+  assign key_share1_9_qe = &key_share1_9_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_9_gated_we;
+  assign key_share1_9_gated_we = key_share1_9_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_9 (
+    .re     (1'b0),
+    .we     (key_share1_9_gated_we),
+    .wd     (key_share1_9_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_9_flds_we[0]),
+    .q      (reg2hw.key_share1[9].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[9].qe = key_share1_9_qe;
+
+
+  // Subregister 10 of Multireg key_share1
+  // R[key_share1_10]: V(True)
+  logic key_share1_10_qe;
+  logic [0:0] key_share1_10_flds_we;
+  assign key_share1_10_qe = &key_share1_10_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_10_gated_we;
+  assign key_share1_10_gated_we = key_share1_10_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_10 (
+    .re     (1'b0),
+    .we     (key_share1_10_gated_we),
+    .wd     (key_share1_10_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_10_flds_we[0]),
+    .q      (reg2hw.key_share1[10].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[10].qe = key_share1_10_qe;
+
+
+  // Subregister 11 of Multireg key_share1
+  // R[key_share1_11]: V(True)
+  logic key_share1_11_qe;
+  logic [0:0] key_share1_11_flds_we;
+  assign key_share1_11_qe = &key_share1_11_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_11_gated_we;
+  assign key_share1_11_gated_we = key_share1_11_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_11 (
+    .re     (1'b0),
+    .we     (key_share1_11_gated_we),
+    .wd     (key_share1_11_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_11_flds_we[0]),
+    .q      (reg2hw.key_share1[11].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[11].qe = key_share1_11_qe;
+
+
+  // Subregister 12 of Multireg key_share1
+  // R[key_share1_12]: V(True)
+  logic key_share1_12_qe;
+  logic [0:0] key_share1_12_flds_we;
+  assign key_share1_12_qe = &key_share1_12_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_12_gated_we;
+  assign key_share1_12_gated_we = key_share1_12_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_12 (
+    .re     (1'b0),
+    .we     (key_share1_12_gated_we),
+    .wd     (key_share1_12_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_12_flds_we[0]),
+    .q      (reg2hw.key_share1[12].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[12].qe = key_share1_12_qe;
+
+
+  // Subregister 13 of Multireg key_share1
+  // R[key_share1_13]: V(True)
+  logic key_share1_13_qe;
+  logic [0:0] key_share1_13_flds_we;
+  assign key_share1_13_qe = &key_share1_13_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_13_gated_we;
+  assign key_share1_13_gated_we = key_share1_13_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_13 (
+    .re     (1'b0),
+    .we     (key_share1_13_gated_we),
+    .wd     (key_share1_13_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_13_flds_we[0]),
+    .q      (reg2hw.key_share1[13].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[13].qe = key_share1_13_qe;
+
+
+  // Subregister 14 of Multireg key_share1
+  // R[key_share1_14]: V(True)
+  logic key_share1_14_qe;
+  logic [0:0] key_share1_14_flds_we;
+  assign key_share1_14_qe = &key_share1_14_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_14_gated_we;
+  assign key_share1_14_gated_we = key_share1_14_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_14 (
+    .re     (1'b0),
+    .we     (key_share1_14_gated_we),
+    .wd     (key_share1_14_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_14_flds_we[0]),
+    .q      (reg2hw.key_share1[14].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[14].qe = key_share1_14_qe;
+
+
+  // Subregister 15 of Multireg key_share1
+  // R[key_share1_15]: V(True)
+  logic key_share1_15_qe;
+  logic [0:0] key_share1_15_flds_we;
+  assign key_share1_15_qe = &key_share1_15_flds_we;
+  // Create REGWEN-gated WE signal
+  logic key_share1_15_gated_we;
+  assign key_share1_15_gated_we = key_share1_15_we & cfg_regwen_qs;
+  prim_subreg_ext #(
+    .DW    (32)
+  ) u_key_share1_15 (
+    .re     (1'b0),
+    .we     (key_share1_15_gated_we),
+    .wd     (key_share1_15_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (key_share1_15_flds_we[0]),
+    .q      (reg2hw.key_share1[15].q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.key_share1[15].qe = key_share1_15_qe;
+
+
+  // R[key_len]: V(False)
+  // Create REGWEN-gated WE signal
+  logic key_len_gated_we;
+  assign key_len_gated_we = key_len_we & cfg_regwen_qs;
+  prim_subreg #(
+    .DW      (3),
+    .SwAccess(prim_subreg_pkg::SwAccessWO),
+    .RESVAL  (3'h0),
+    .Mubi    (1'b0)
+  ) u_key_len (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (key_len_gated_we),
+    .wd     (key_len_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.key_len.q),
+    .ds     (),
+
+    // to register interface (read)
+    .qs     ()
   );
 
 
@@ -1241,7 +2589,7 @@ module kmac_reg_top (
 
 
 
-  logic [19:0] addr_hit;
+  logic [56:0] addr_hit;
   always_comb begin
     addr_hit[ 0] = (reg_addr == KMAC_INTR_STATE_OFFSET);
     addr_hit[ 1] = (reg_addr == KMAC_INTR_ENABLE_OFFSET);
@@ -1251,18 +2599,55 @@ module kmac_reg_top (
     addr_hit[ 5] = (reg_addr == KMAC_CFG_SHADOWED_OFFSET);
     addr_hit[ 6] = (reg_addr == KMAC_CMD_OFFSET);
     addr_hit[ 7] = (reg_addr == KMAC_STATUS_OFFSET);
-    addr_hit[ 8] = (reg_addr == KMAC_PREFIX_0_OFFSET);
-    addr_hit[ 9] = (reg_addr == KMAC_PREFIX_1_OFFSET);
-    addr_hit[10] = (reg_addr == KMAC_PREFIX_2_OFFSET);
-    addr_hit[11] = (reg_addr == KMAC_PREFIX_3_OFFSET);
-    addr_hit[12] = (reg_addr == KMAC_PREFIX_4_OFFSET);
-    addr_hit[13] = (reg_addr == KMAC_PREFIX_5_OFFSET);
-    addr_hit[14] = (reg_addr == KMAC_PREFIX_6_OFFSET);
-    addr_hit[15] = (reg_addr == KMAC_PREFIX_7_OFFSET);
-    addr_hit[16] = (reg_addr == KMAC_PREFIX_8_OFFSET);
-    addr_hit[17] = (reg_addr == KMAC_PREFIX_9_OFFSET);
-    addr_hit[18] = (reg_addr == KMAC_PREFIX_10_OFFSET);
-    addr_hit[19] = (reg_addr == KMAC_ERR_CODE_OFFSET);
+    addr_hit[ 8] = (reg_addr == KMAC_ENTROPY_PERIOD_OFFSET);
+    addr_hit[ 9] = (reg_addr == KMAC_ENTROPY_REFRESH_HASH_CNT_OFFSET);
+    addr_hit[10] = (reg_addr == KMAC_ENTROPY_REFRESH_THRESHOLD_SHADOWED_OFFSET);
+    addr_hit[11] = (reg_addr == KMAC_ENTROPY_SEED_OFFSET);
+    addr_hit[12] = (reg_addr == KMAC_KEY_SHARE0_0_OFFSET);
+    addr_hit[13] = (reg_addr == KMAC_KEY_SHARE0_1_OFFSET);
+    addr_hit[14] = (reg_addr == KMAC_KEY_SHARE0_2_OFFSET);
+    addr_hit[15] = (reg_addr == KMAC_KEY_SHARE0_3_OFFSET);
+    addr_hit[16] = (reg_addr == KMAC_KEY_SHARE0_4_OFFSET);
+    addr_hit[17] = (reg_addr == KMAC_KEY_SHARE0_5_OFFSET);
+    addr_hit[18] = (reg_addr == KMAC_KEY_SHARE0_6_OFFSET);
+    addr_hit[19] = (reg_addr == KMAC_KEY_SHARE0_7_OFFSET);
+    addr_hit[20] = (reg_addr == KMAC_KEY_SHARE0_8_OFFSET);
+    addr_hit[21] = (reg_addr == KMAC_KEY_SHARE0_9_OFFSET);
+    addr_hit[22] = (reg_addr == KMAC_KEY_SHARE0_10_OFFSET);
+    addr_hit[23] = (reg_addr == KMAC_KEY_SHARE0_11_OFFSET);
+    addr_hit[24] = (reg_addr == KMAC_KEY_SHARE0_12_OFFSET);
+    addr_hit[25] = (reg_addr == KMAC_KEY_SHARE0_13_OFFSET);
+    addr_hit[26] = (reg_addr == KMAC_KEY_SHARE0_14_OFFSET);
+    addr_hit[27] = (reg_addr == KMAC_KEY_SHARE0_15_OFFSET);
+    addr_hit[28] = (reg_addr == KMAC_KEY_SHARE1_0_OFFSET);
+    addr_hit[29] = (reg_addr == KMAC_KEY_SHARE1_1_OFFSET);
+    addr_hit[30] = (reg_addr == KMAC_KEY_SHARE1_2_OFFSET);
+    addr_hit[31] = (reg_addr == KMAC_KEY_SHARE1_3_OFFSET);
+    addr_hit[32] = (reg_addr == KMAC_KEY_SHARE1_4_OFFSET);
+    addr_hit[33] = (reg_addr == KMAC_KEY_SHARE1_5_OFFSET);
+    addr_hit[34] = (reg_addr == KMAC_KEY_SHARE1_6_OFFSET);
+    addr_hit[35] = (reg_addr == KMAC_KEY_SHARE1_7_OFFSET);
+    addr_hit[36] = (reg_addr == KMAC_KEY_SHARE1_8_OFFSET);
+    addr_hit[37] = (reg_addr == KMAC_KEY_SHARE1_9_OFFSET);
+    addr_hit[38] = (reg_addr == KMAC_KEY_SHARE1_10_OFFSET);
+    addr_hit[39] = (reg_addr == KMAC_KEY_SHARE1_11_OFFSET);
+    addr_hit[40] = (reg_addr == KMAC_KEY_SHARE1_12_OFFSET);
+    addr_hit[41] = (reg_addr == KMAC_KEY_SHARE1_13_OFFSET);
+    addr_hit[42] = (reg_addr == KMAC_KEY_SHARE1_14_OFFSET);
+    addr_hit[43] = (reg_addr == KMAC_KEY_SHARE1_15_OFFSET);
+    addr_hit[44] = (reg_addr == KMAC_KEY_LEN_OFFSET);
+    addr_hit[45] = (reg_addr == KMAC_PREFIX_0_OFFSET);
+    addr_hit[46] = (reg_addr == KMAC_PREFIX_1_OFFSET);
+    addr_hit[47] = (reg_addr == KMAC_PREFIX_2_OFFSET);
+    addr_hit[48] = (reg_addr == KMAC_PREFIX_3_OFFSET);
+    addr_hit[49] = (reg_addr == KMAC_PREFIX_4_OFFSET);
+    addr_hit[50] = (reg_addr == KMAC_PREFIX_5_OFFSET);
+    addr_hit[51] = (reg_addr == KMAC_PREFIX_6_OFFSET);
+    addr_hit[52] = (reg_addr == KMAC_PREFIX_7_OFFSET);
+    addr_hit[53] = (reg_addr == KMAC_PREFIX_8_OFFSET);
+    addr_hit[54] = (reg_addr == KMAC_PREFIX_9_OFFSET);
+    addr_hit[55] = (reg_addr == KMAC_PREFIX_10_OFFSET);
+    addr_hit[56] = (reg_addr == KMAC_ERR_CODE_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -1289,7 +2674,44 @@ module kmac_reg_top (
                (addr_hit[16] & (|(KMAC_PERMIT[16] & ~reg_be))) |
                (addr_hit[17] & (|(KMAC_PERMIT[17] & ~reg_be))) |
                (addr_hit[18] & (|(KMAC_PERMIT[18] & ~reg_be))) |
-               (addr_hit[19] & (|(KMAC_PERMIT[19] & ~reg_be)))));
+               (addr_hit[19] & (|(KMAC_PERMIT[19] & ~reg_be))) |
+               (addr_hit[20] & (|(KMAC_PERMIT[20] & ~reg_be))) |
+               (addr_hit[21] & (|(KMAC_PERMIT[21] & ~reg_be))) |
+               (addr_hit[22] & (|(KMAC_PERMIT[22] & ~reg_be))) |
+               (addr_hit[23] & (|(KMAC_PERMIT[23] & ~reg_be))) |
+               (addr_hit[24] & (|(KMAC_PERMIT[24] & ~reg_be))) |
+               (addr_hit[25] & (|(KMAC_PERMIT[25] & ~reg_be))) |
+               (addr_hit[26] & (|(KMAC_PERMIT[26] & ~reg_be))) |
+               (addr_hit[27] & (|(KMAC_PERMIT[27] & ~reg_be))) |
+               (addr_hit[28] & (|(KMAC_PERMIT[28] & ~reg_be))) |
+               (addr_hit[29] & (|(KMAC_PERMIT[29] & ~reg_be))) |
+               (addr_hit[30] & (|(KMAC_PERMIT[30] & ~reg_be))) |
+               (addr_hit[31] & (|(KMAC_PERMIT[31] & ~reg_be))) |
+               (addr_hit[32] & (|(KMAC_PERMIT[32] & ~reg_be))) |
+               (addr_hit[33] & (|(KMAC_PERMIT[33] & ~reg_be))) |
+               (addr_hit[34] & (|(KMAC_PERMIT[34] & ~reg_be))) |
+               (addr_hit[35] & (|(KMAC_PERMIT[35] & ~reg_be))) |
+               (addr_hit[36] & (|(KMAC_PERMIT[36] & ~reg_be))) |
+               (addr_hit[37] & (|(KMAC_PERMIT[37] & ~reg_be))) |
+               (addr_hit[38] & (|(KMAC_PERMIT[38] & ~reg_be))) |
+               (addr_hit[39] & (|(KMAC_PERMIT[39] & ~reg_be))) |
+               (addr_hit[40] & (|(KMAC_PERMIT[40] & ~reg_be))) |
+               (addr_hit[41] & (|(KMAC_PERMIT[41] & ~reg_be))) |
+               (addr_hit[42] & (|(KMAC_PERMIT[42] & ~reg_be))) |
+               (addr_hit[43] & (|(KMAC_PERMIT[43] & ~reg_be))) |
+               (addr_hit[44] & (|(KMAC_PERMIT[44] & ~reg_be))) |
+               (addr_hit[45] & (|(KMAC_PERMIT[45] & ~reg_be))) |
+               (addr_hit[46] & (|(KMAC_PERMIT[46] & ~reg_be))) |
+               (addr_hit[47] & (|(KMAC_PERMIT[47] & ~reg_be))) |
+               (addr_hit[48] & (|(KMAC_PERMIT[48] & ~reg_be))) |
+               (addr_hit[49] & (|(KMAC_PERMIT[49] & ~reg_be))) |
+               (addr_hit[50] & (|(KMAC_PERMIT[50] & ~reg_be))) |
+               (addr_hit[51] & (|(KMAC_PERMIT[51] & ~reg_be))) |
+               (addr_hit[52] & (|(KMAC_PERMIT[52] & ~reg_be))) |
+               (addr_hit[53] & (|(KMAC_PERMIT[53] & ~reg_be))) |
+               (addr_hit[54] & (|(KMAC_PERMIT[54] & ~reg_be))) |
+               (addr_hit[55] & (|(KMAC_PERMIT[55] & ~reg_be))) |
+               (addr_hit[56] & (|(KMAC_PERMIT[56] & ~reg_be)))));
   end
 
   // Generate write-enables
@@ -1321,6 +2743,8 @@ module kmac_reg_top (
   assign cfg_shadowed_re = addr_hit[5] & reg_re & !reg_error;
   assign cfg_shadowed_we = addr_hit[5] & reg_we & !reg_error;
 
+  assign cfg_shadowed_kmac_en_wd = reg_wdata[0];
+
   assign cfg_shadowed_kstrength_wd = reg_wdata[3:1];
 
   assign cfg_shadowed_mode_wd = reg_wdata[5:4];
@@ -1328,43 +2752,170 @@ module kmac_reg_top (
   assign cfg_shadowed_msg_endianness_wd = reg_wdata[8];
 
   assign cfg_shadowed_state_endianness_wd = reg_wdata[9];
+
+  assign cfg_shadowed_sideload_wd = reg_wdata[12];
+
+  assign cfg_shadowed_entropy_mode_wd = reg_wdata[17:16];
+
+  assign cfg_shadowed_entropy_fast_process_wd = reg_wdata[19];
+
+  assign cfg_shadowed_msg_mask_wd = reg_wdata[20];
+
+  assign cfg_shadowed_entropy_ready_wd = reg_wdata[24];
+
+  assign cfg_shadowed_en_unsupported_modestrength_wd = reg_wdata[26];
   assign cmd_we = addr_hit[6] & reg_we & !reg_error;
 
   assign cmd_cmd_wd = reg_wdata[5:0];
 
+  assign cmd_entropy_req_wd = reg_wdata[8];
+
+  assign cmd_hash_cnt_clr_wd = reg_wdata[9];
+
   assign cmd_err_processed_wd = reg_wdata[10];
   assign status_re = addr_hit[7] & reg_re & !reg_error;
-  assign prefix_0_we = addr_hit[8] & reg_we & !reg_error;
+  assign entropy_period_we = addr_hit[8] & reg_we & !reg_error;
+
+  assign entropy_period_prescaler_wd = reg_wdata[9:0];
+
+  assign entropy_period_wait_timer_wd = reg_wdata[31:16];
+  assign entropy_refresh_threshold_shadowed_re = addr_hit[10] & reg_re & !reg_error;
+  assign entropy_refresh_threshold_shadowed_we = addr_hit[10] & reg_we & !reg_error;
+
+  assign entropy_refresh_threshold_shadowed_wd = reg_wdata[9:0];
+  assign entropy_seed_we = addr_hit[11] & reg_we & !reg_error;
+
+  assign entropy_seed_wd = reg_wdata[31:0];
+  assign key_share0_0_we = addr_hit[12] & reg_we & !reg_error;
+
+  assign key_share0_0_wd = reg_wdata[31:0];
+  assign key_share0_1_we = addr_hit[13] & reg_we & !reg_error;
+
+  assign key_share0_1_wd = reg_wdata[31:0];
+  assign key_share0_2_we = addr_hit[14] & reg_we & !reg_error;
+
+  assign key_share0_2_wd = reg_wdata[31:0];
+  assign key_share0_3_we = addr_hit[15] & reg_we & !reg_error;
+
+  assign key_share0_3_wd = reg_wdata[31:0];
+  assign key_share0_4_we = addr_hit[16] & reg_we & !reg_error;
+
+  assign key_share0_4_wd = reg_wdata[31:0];
+  assign key_share0_5_we = addr_hit[17] & reg_we & !reg_error;
+
+  assign key_share0_5_wd = reg_wdata[31:0];
+  assign key_share0_6_we = addr_hit[18] & reg_we & !reg_error;
+
+  assign key_share0_6_wd = reg_wdata[31:0];
+  assign key_share0_7_we = addr_hit[19] & reg_we & !reg_error;
+
+  assign key_share0_7_wd = reg_wdata[31:0];
+  assign key_share0_8_we = addr_hit[20] & reg_we & !reg_error;
+
+  assign key_share0_8_wd = reg_wdata[31:0];
+  assign key_share0_9_we = addr_hit[21] & reg_we & !reg_error;
+
+  assign key_share0_9_wd = reg_wdata[31:0];
+  assign key_share0_10_we = addr_hit[22] & reg_we & !reg_error;
+
+  assign key_share0_10_wd = reg_wdata[31:0];
+  assign key_share0_11_we = addr_hit[23] & reg_we & !reg_error;
+
+  assign key_share0_11_wd = reg_wdata[31:0];
+  assign key_share0_12_we = addr_hit[24] & reg_we & !reg_error;
+
+  assign key_share0_12_wd = reg_wdata[31:0];
+  assign key_share0_13_we = addr_hit[25] & reg_we & !reg_error;
+
+  assign key_share0_13_wd = reg_wdata[31:0];
+  assign key_share0_14_we = addr_hit[26] & reg_we & !reg_error;
+
+  assign key_share0_14_wd = reg_wdata[31:0];
+  assign key_share0_15_we = addr_hit[27] & reg_we & !reg_error;
+
+  assign key_share0_15_wd = reg_wdata[31:0];
+  assign key_share1_0_we = addr_hit[28] & reg_we & !reg_error;
+
+  assign key_share1_0_wd = reg_wdata[31:0];
+  assign key_share1_1_we = addr_hit[29] & reg_we & !reg_error;
+
+  assign key_share1_1_wd = reg_wdata[31:0];
+  assign key_share1_2_we = addr_hit[30] & reg_we & !reg_error;
+
+  assign key_share1_2_wd = reg_wdata[31:0];
+  assign key_share1_3_we = addr_hit[31] & reg_we & !reg_error;
+
+  assign key_share1_3_wd = reg_wdata[31:0];
+  assign key_share1_4_we = addr_hit[32] & reg_we & !reg_error;
+
+  assign key_share1_4_wd = reg_wdata[31:0];
+  assign key_share1_5_we = addr_hit[33] & reg_we & !reg_error;
+
+  assign key_share1_5_wd = reg_wdata[31:0];
+  assign key_share1_6_we = addr_hit[34] & reg_we & !reg_error;
+
+  assign key_share1_6_wd = reg_wdata[31:0];
+  assign key_share1_7_we = addr_hit[35] & reg_we & !reg_error;
+
+  assign key_share1_7_wd = reg_wdata[31:0];
+  assign key_share1_8_we = addr_hit[36] & reg_we & !reg_error;
+
+  assign key_share1_8_wd = reg_wdata[31:0];
+  assign key_share1_9_we = addr_hit[37] & reg_we & !reg_error;
+
+  assign key_share1_9_wd = reg_wdata[31:0];
+  assign key_share1_10_we = addr_hit[38] & reg_we & !reg_error;
+
+  assign key_share1_10_wd = reg_wdata[31:0];
+  assign key_share1_11_we = addr_hit[39] & reg_we & !reg_error;
+
+  assign key_share1_11_wd = reg_wdata[31:0];
+  assign key_share1_12_we = addr_hit[40] & reg_we & !reg_error;
+
+  assign key_share1_12_wd = reg_wdata[31:0];
+  assign key_share1_13_we = addr_hit[41] & reg_we & !reg_error;
+
+  assign key_share1_13_wd = reg_wdata[31:0];
+  assign key_share1_14_we = addr_hit[42] & reg_we & !reg_error;
+
+  assign key_share1_14_wd = reg_wdata[31:0];
+  assign key_share1_15_we = addr_hit[43] & reg_we & !reg_error;
+
+  assign key_share1_15_wd = reg_wdata[31:0];
+  assign key_len_we = addr_hit[44] & reg_we & !reg_error;
+
+  assign key_len_wd = reg_wdata[2:0];
+  assign prefix_0_we = addr_hit[45] & reg_we & !reg_error;
 
   assign prefix_0_wd = reg_wdata[31:0];
-  assign prefix_1_we = addr_hit[9] & reg_we & !reg_error;
+  assign prefix_1_we = addr_hit[46] & reg_we & !reg_error;
 
   assign prefix_1_wd = reg_wdata[31:0];
-  assign prefix_2_we = addr_hit[10] & reg_we & !reg_error;
+  assign prefix_2_we = addr_hit[47] & reg_we & !reg_error;
 
   assign prefix_2_wd = reg_wdata[31:0];
-  assign prefix_3_we = addr_hit[11] & reg_we & !reg_error;
+  assign prefix_3_we = addr_hit[48] & reg_we & !reg_error;
 
   assign prefix_3_wd = reg_wdata[31:0];
-  assign prefix_4_we = addr_hit[12] & reg_we & !reg_error;
+  assign prefix_4_we = addr_hit[49] & reg_we & !reg_error;
 
   assign prefix_4_wd = reg_wdata[31:0];
-  assign prefix_5_we = addr_hit[13] & reg_we & !reg_error;
+  assign prefix_5_we = addr_hit[50] & reg_we & !reg_error;
 
   assign prefix_5_wd = reg_wdata[31:0];
-  assign prefix_6_we = addr_hit[14] & reg_we & !reg_error;
+  assign prefix_6_we = addr_hit[51] & reg_we & !reg_error;
 
   assign prefix_6_wd = reg_wdata[31:0];
-  assign prefix_7_we = addr_hit[15] & reg_we & !reg_error;
+  assign prefix_7_we = addr_hit[52] & reg_we & !reg_error;
 
   assign prefix_7_wd = reg_wdata[31:0];
-  assign prefix_8_we = addr_hit[16] & reg_we & !reg_error;
+  assign prefix_8_we = addr_hit[53] & reg_we & !reg_error;
 
   assign prefix_8_wd = reg_wdata[31:0];
-  assign prefix_9_we = addr_hit[17] & reg_we & !reg_error;
+  assign prefix_9_we = addr_hit[54] & reg_we & !reg_error;
 
   assign prefix_9_wd = reg_wdata[31:0];
-  assign prefix_10_we = addr_hit[18] & reg_we & !reg_error;
+  assign prefix_10_we = addr_hit[55] & reg_we & !reg_error;
 
   assign prefix_10_wd = reg_wdata[31:0];
 
@@ -1378,18 +2929,55 @@ module kmac_reg_top (
     reg_we_check[5] = cfg_shadowed_gated_we;
     reg_we_check[6] = cmd_we;
     reg_we_check[7] = 1'b0;
-    reg_we_check[8] = prefix_0_gated_we;
-    reg_we_check[9] = prefix_1_gated_we;
-    reg_we_check[10] = prefix_2_gated_we;
-    reg_we_check[11] = prefix_3_gated_we;
-    reg_we_check[12] = prefix_4_gated_we;
-    reg_we_check[13] = prefix_5_gated_we;
-    reg_we_check[14] = prefix_6_gated_we;
-    reg_we_check[15] = prefix_7_gated_we;
-    reg_we_check[16] = prefix_8_gated_we;
-    reg_we_check[17] = prefix_9_gated_we;
-    reg_we_check[18] = prefix_10_gated_we;
-    reg_we_check[19] = 1'b0;
+    reg_we_check[8] = entropy_period_gated_we;
+    reg_we_check[9] = 1'b0;
+    reg_we_check[10] = entropy_refresh_threshold_shadowed_gated_we;
+    reg_we_check[11] = entropy_seed_we;
+    reg_we_check[12] = key_share0_0_gated_we;
+    reg_we_check[13] = key_share0_1_gated_we;
+    reg_we_check[14] = key_share0_2_gated_we;
+    reg_we_check[15] = key_share0_3_gated_we;
+    reg_we_check[16] = key_share0_4_gated_we;
+    reg_we_check[17] = key_share0_5_gated_we;
+    reg_we_check[18] = key_share0_6_gated_we;
+    reg_we_check[19] = key_share0_7_gated_we;
+    reg_we_check[20] = key_share0_8_gated_we;
+    reg_we_check[21] = key_share0_9_gated_we;
+    reg_we_check[22] = key_share0_10_gated_we;
+    reg_we_check[23] = key_share0_11_gated_we;
+    reg_we_check[24] = key_share0_12_gated_we;
+    reg_we_check[25] = key_share0_13_gated_we;
+    reg_we_check[26] = key_share0_14_gated_we;
+    reg_we_check[27] = key_share0_15_gated_we;
+    reg_we_check[28] = key_share1_0_gated_we;
+    reg_we_check[29] = key_share1_1_gated_we;
+    reg_we_check[30] = key_share1_2_gated_we;
+    reg_we_check[31] = key_share1_3_gated_we;
+    reg_we_check[32] = key_share1_4_gated_we;
+    reg_we_check[33] = key_share1_5_gated_we;
+    reg_we_check[34] = key_share1_6_gated_we;
+    reg_we_check[35] = key_share1_7_gated_we;
+    reg_we_check[36] = key_share1_8_gated_we;
+    reg_we_check[37] = key_share1_9_gated_we;
+    reg_we_check[38] = key_share1_10_gated_we;
+    reg_we_check[39] = key_share1_11_gated_we;
+    reg_we_check[40] = key_share1_12_gated_we;
+    reg_we_check[41] = key_share1_13_gated_we;
+    reg_we_check[42] = key_share1_14_gated_we;
+    reg_we_check[43] = key_share1_15_gated_we;
+    reg_we_check[44] = key_len_gated_we;
+    reg_we_check[45] = prefix_0_gated_we;
+    reg_we_check[46] = prefix_1_gated_we;
+    reg_we_check[47] = prefix_2_gated_we;
+    reg_we_check[48] = prefix_3_gated_we;
+    reg_we_check[49] = prefix_4_gated_we;
+    reg_we_check[50] = prefix_5_gated_we;
+    reg_we_check[51] = prefix_6_gated_we;
+    reg_we_check[52] = prefix_7_gated_we;
+    reg_we_check[53] = prefix_8_gated_we;
+    reg_we_check[54] = prefix_9_gated_we;
+    reg_we_check[55] = prefix_10_gated_we;
+    reg_we_check[56] = 1'b0;
   end
 
   // Read data return
@@ -1424,14 +3012,23 @@ module kmac_reg_top (
       end
 
       addr_hit[5]: begin
+        reg_rdata_next[0] = cfg_shadowed_kmac_en_qs;
         reg_rdata_next[3:1] = cfg_shadowed_kstrength_qs;
         reg_rdata_next[5:4] = cfg_shadowed_mode_qs;
         reg_rdata_next[8] = cfg_shadowed_msg_endianness_qs;
         reg_rdata_next[9] = cfg_shadowed_state_endianness_qs;
+        reg_rdata_next[12] = cfg_shadowed_sideload_qs;
+        reg_rdata_next[17:16] = cfg_shadowed_entropy_mode_qs;
+        reg_rdata_next[19] = cfg_shadowed_entropy_fast_process_qs;
+        reg_rdata_next[20] = cfg_shadowed_msg_mask_qs;
+        reg_rdata_next[24] = cfg_shadowed_entropy_ready_qs;
+        reg_rdata_next[26] = cfg_shadowed_en_unsupported_modestrength_qs;
       end
 
       addr_hit[6]: begin
         reg_rdata_next[5:0] = '0;
+        reg_rdata_next[8] = '0;
+        reg_rdata_next[9] = '0;
         reg_rdata_next[10] = '0;
       end
 
@@ -1447,50 +3044,199 @@ module kmac_reg_top (
       end
 
       addr_hit[8]: begin
-        reg_rdata_next[31:0] = prefix_0_qs;
+        reg_rdata_next[9:0] = entropy_period_prescaler_qs;
+        reg_rdata_next[31:16] = entropy_period_wait_timer_qs;
       end
 
       addr_hit[9]: begin
-        reg_rdata_next[31:0] = prefix_1_qs;
+        reg_rdata_next[9:0] = entropy_refresh_hash_cnt_qs;
       end
 
       addr_hit[10]: begin
-        reg_rdata_next[31:0] = prefix_2_qs;
+        reg_rdata_next[9:0] = entropy_refresh_threshold_shadowed_qs;
       end
 
       addr_hit[11]: begin
-        reg_rdata_next[31:0] = prefix_3_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[12]: begin
-        reg_rdata_next[31:0] = prefix_4_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[13]: begin
-        reg_rdata_next[31:0] = prefix_5_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[14]: begin
-        reg_rdata_next[31:0] = prefix_6_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[15]: begin
-        reg_rdata_next[31:0] = prefix_7_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[16]: begin
-        reg_rdata_next[31:0] = prefix_8_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[17]: begin
-        reg_rdata_next[31:0] = prefix_9_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[18]: begin
-        reg_rdata_next[31:0] = prefix_10_qs;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[19]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[20]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[21]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[22]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[23]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[24]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[25]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[26]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[27]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[28]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[29]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[30]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[31]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[32]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[33]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[34]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[35]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[36]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[37]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[38]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[39]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[40]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[41]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[42]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[43]: begin
+        reg_rdata_next[31:0] = '0;
+      end
+
+      addr_hit[44]: begin
+        reg_rdata_next[2:0] = '0;
+      end
+
+      addr_hit[45]: begin
+        reg_rdata_next[31:0] = prefix_0_qs;
+      end
+
+      addr_hit[46]: begin
+        reg_rdata_next[31:0] = prefix_1_qs;
+      end
+
+      addr_hit[47]: begin
+        reg_rdata_next[31:0] = prefix_2_qs;
+      end
+
+      addr_hit[48]: begin
+        reg_rdata_next[31:0] = prefix_3_qs;
+      end
+
+      addr_hit[49]: begin
+        reg_rdata_next[31:0] = prefix_4_qs;
+      end
+
+      addr_hit[50]: begin
+        reg_rdata_next[31:0] = prefix_5_qs;
+      end
+
+      addr_hit[51]: begin
+        reg_rdata_next[31:0] = prefix_6_qs;
+      end
+
+      addr_hit[52]: begin
+        reg_rdata_next[31:0] = prefix_7_qs;
+      end
+
+      addr_hit[53]: begin
+        reg_rdata_next[31:0] = prefix_8_qs;
+      end
+
+      addr_hit[54]: begin
+        reg_rdata_next[31:0] = prefix_9_qs;
+      end
+
+      addr_hit[55]: begin
+        reg_rdata_next[31:0] = prefix_10_qs;
+      end
+
+      addr_hit[56]: begin
         reg_rdata_next[31:0] = err_code_qs;
       end
 
@@ -1525,16 +3271,32 @@ module kmac_reg_top (
 
   // Collect up storage and update errors
   assign shadowed_storage_err_o = |{
+    cfg_shadowed_kmac_en_storage_err,
     cfg_shadowed_kstrength_storage_err,
     cfg_shadowed_mode_storage_err,
     cfg_shadowed_msg_endianness_storage_err,
-    cfg_shadowed_state_endianness_storage_err
+    cfg_shadowed_state_endianness_storage_err,
+    cfg_shadowed_sideload_storage_err,
+    cfg_shadowed_entropy_mode_storage_err,
+    cfg_shadowed_entropy_fast_process_storage_err,
+    cfg_shadowed_msg_mask_storage_err,
+    cfg_shadowed_entropy_ready_storage_err,
+    cfg_shadowed_en_unsupported_modestrength_storage_err,
+    entropy_refresh_threshold_shadowed_storage_err
   };
   assign shadowed_update_err_o = |{
+    cfg_shadowed_kmac_en_update_err,
     cfg_shadowed_kstrength_update_err,
     cfg_shadowed_mode_update_err,
     cfg_shadowed_msg_endianness_update_err,
-    cfg_shadowed_state_endianness_update_err
+    cfg_shadowed_state_endianness_update_err,
+    cfg_shadowed_sideload_update_err,
+    cfg_shadowed_entropy_mode_update_err,
+    cfg_shadowed_entropy_fast_process_update_err,
+    cfg_shadowed_msg_mask_update_err,
+    cfg_shadowed_entropy_ready_update_err,
+    cfg_shadowed_en_unsupported_modestrength_update_err,
+    entropy_refresh_threshold_shadowed_update_err
   };
 
   // register busy
