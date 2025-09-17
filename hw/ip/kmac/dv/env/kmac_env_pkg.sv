@@ -72,9 +72,9 @@ package kmac_env_pkg;
   parameter uint NUM_EDN = 1;
 
   // Earlgrey has 3 application interfaces
-  parameter uint NUM_APP_INTF = 3;
+  parameter uint NUM_APP_INTF = 2;
   parameter app_config_t APP_CFG[NUM_APP_INTF] =
-    '{kmac_pkg::AppCfgKeyMgr, kmac_pkg::AppCfgLcCtrl, kmac_pkg::AppCfgRomCtrl};
+    '{kmac_pkg::AppCfgKeyMgrStripped, kmac_pkg::AppCfgKeyMgrStripped};
 
   /////////////////////////////
   // Timing Model Parameters //

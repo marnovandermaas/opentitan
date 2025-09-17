@@ -134,7 +134,7 @@
     }
     { name:    "NumAppIntf"
       type:    "int"
-      default: "3"
+      default: "2"
       desc:    "Number of application interfaces"
       local:   "false"
       expose:  "true"
@@ -145,7 +145,7 @@
                            '''
       type:                "kmac_pkg::app_config_t"
       unpacked_dimensions: "[KmacNumAppIntf]"
-      default:             "'{kmac_pkg::AppCfgKeyMgr, kmac_pkg::AppCfgLcCtrl, kmac_pkg::AppCfgRomCtrl}"
+      default:             "'{kmac_pkg::AppCfgKeyMgrStriped, kmac_pkg::AppCfgKeyMgrStripped}"
       local:               "false"
       expose:              "true"
     }
