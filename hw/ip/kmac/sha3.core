@@ -13,11 +13,11 @@ filesets:
       - lowrisc:prim:mubi
       - lowrisc:ip:tlul
     files:
-      - rtl/sha3_pkg.sv
-      - rtl/keccak_round.sv
-      - rtl/keccak_2share.sv
-      - rtl/sha3pad.sv
-      - rtl/sha3.sv
+      - rtl/ot_sha3_pkg.sv
+      - rtl/ot_keccak_round.sv
+      - rtl/ot_keccak_2share.sv
+      - rtl/ot_sha3pad.sv
+      - rtl/ot_sha3.sv
     file_type: systemVerilogSource
 
   files_verilator_waiver:
