@@ -30,15 +30,15 @@ class kmac_test_vectors_sha3_vseq extends kmac_test_vectors_base_vseq;
 
   virtual function void randomize_cfg(test_vectors_pkg::test_vectors_t vector);
     `DV_CHECK_RANDOMIZE_WITH_FATAL(this,
-      hash_mode == sha3_pkg::Sha3;
+      hash_mode == ot_sha3_pkg::Sha3;
       if (cfg.sha3_variant == 224) {
-        strength == sha3_pkg::L224;
+        strength == ot_sha3_pkg::L224;
       } else if (cfg.sha3_variant == 256) {
-        strength == sha3_pkg::L256;
+        strength == ot_sha3_pkg::L256;
       } else if (cfg.sha3_variant == 384) {
-        strength == sha3_pkg::L384;
+        strength == ot_sha3_pkg::L384;
       } else if (cfg.sha3_variant == 512) {
-        strength == sha3_pkg::L512;
+        strength == ot_sha3_pkg::L512;
       }
       kmac_en == 0;
       output_len == vector.digest_length_byte;

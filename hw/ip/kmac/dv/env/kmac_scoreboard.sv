@@ -54,8 +54,8 @@ class kmac_scoreboard extends cip_base_scoreboard #(
   // CFG fields
   bit kmac_en;
   bit sideload_en;
-  sha3_pkg::sha3_mode_e hash_mode;
-  sha3_pkg::keccak_strength_e strength;
+  ot_sha3_pkg::sha3_mode_e hash_mode;
+  ot_sha3_pkg::keccak_strength_e strength;
   entropy_mode_e entropy_mode = EntropyModeNone;
   bit entropy_fast_process;
   bit entropy_ready;
@@ -63,7 +63,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
   // The scoreboard overwrites the value configured by software with the value of the application
   // interface. Keep a separate copy of the CSR value to restore it after application interface
   // transactions finish.
-  sha3_pkg::keccak_strength_e strength_csr;
+  ot_sha3_pkg::keccak_strength_e strength_csr;
 
   // Set this bit when entropy_ready is 1 and entropy_mode is EntropyModeEdn,
   // to indicate that we are now waiting on the EDN to return valid entropy
@@ -98,8 +98,8 @@ class kmac_scoreboard extends cip_base_scoreboard #(
   kmac_pkg::err_t kmac_err = '{valid: 1'b0,
                                code: kmac_pkg::ErrNone,
                                info: '0};
-  sha3_pkg::err_t sha3_err = '{valid: 1'b0,
-                               code: sha3_pkg::ErrNone,
+  ot_sha3_pkg::err_t sha3_err = '{valid: 1'b0,
+                               code: ot_sha3_pkg::ErrNone,
                                info: '0};
   // Need to track the FSM in `kmac_app` and the mux select value,
   // these are used in App-related error reporting
@@ -332,14 +332,14 @@ class kmac_scoreboard extends cip_base_scoreboard #(
             // we need to choose the correct application interface
             if (`KMAC_APP_VALID_TRANS(AppKeymgr)) begin
               app_mode = AppKeymgr;
-              strength = sha3_pkg::L256;
+              strength = ot_sha3_pkg::L256;
               if (entropy_ready) incr_and_predict_hash_cnt();
             end else if (`KMAC_APP_VALID_TRANS(AppLc)) begin
               app_mode = AppLc;
-              strength = sha3_pkg::L128;
+              strength = ot_sha3_pkg::L128;
             end else if (`KMAC_APP_VALID_TRANS(AppRom)) begin
               app_mode = AppRom;
-              strength = sha3_pkg::L256;
+              strength = ot_sha3_pkg::L256;
             end
 
             // sample sideload-related coverage
@@ -755,9 +755,9 @@ class kmac_scoreboard extends cip_base_scoreboard #(
           entropy_ready        = item.a_data[KmacEntropyReady];
           sideload_en          = item.a_data[KmacSideload];
 
-          hash_mode = sha3_pkg::sha3_mode_e'(item.a_data[KmacModeMSB:KmacModeLSB]);
+          hash_mode = ot_sha3_pkg::sha3_mode_e'(item.a_data[KmacModeMSB:KmacModeLSB]);
 
-          strength = sha3_pkg::keccak_strength_e'(item.a_data[KmacStrengthMSB:KmacStrengthLSB]);
+          strength = ot_sha3_pkg::keccak_strength_e'(item.a_data[KmacStrengthMSB:KmacStrengthLSB]);
           strength_csr = strength;
 
           entropy_mode = entropy_mode_e'(item.a_data[KmacEntropyModeMSB:KmacEntropyModeLSB]);
@@ -814,10 +814,10 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                 bit en_unsupported_modestrength = 1;
 
                 // Mode/Strength configuration error
-                if ((hash_mode inside {sha3_pkg::Shake, sha3_pkg::CShake} &&
-                      !(strength inside {sha3_pkg::L128, sha3_pkg::L256})) ||
-                     (hash_mode == sha3_pkg::Sha3 &&
-                      strength == sha3_pkg::L128)) begin
+                if ((hash_mode inside {ot_sha3_pkg::Shake, ot_sha3_pkg::CShake} &&
+                      !(strength inside {ot_sha3_pkg::L128, ot_sha3_pkg::L256})) ||
+                     (hash_mode == ot_sha3_pkg::Sha3 &&
+                      strength == ot_sha3_pkg::L128)) begin
                   kmac_err.valid  = 1;
                   kmac_err.code   = kmac_pkg::ErrUnexpectedModeStrength;
                   kmac_err.info   = {8'h2, 10'h0, 2'(hash_mode), 1'b0, 3'(strength)};
@@ -1018,7 +1018,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
             do_read_check = 0;
             `DV_CHECK_EQ(csr.get_mirrored_value() & err_chk_mask, item.d_data & err_chk_mask,
                          $sformatf("reg name: %0s", csr.get_full_name()))
-          end else if ((err_code.code == sha3_pkg::ErrSha3SwControl) &&
+          end else if ((err_code.code == ot_sha3_pkg::ErrSha3SwControl) &&
                        cfg.expect_sha3_sw_ctrl_err) begin
             // A fault was injected to the sha3 done singal.
             do_read_check = 0;
@@ -1345,7 +1345,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                  code: kmac_pkg::ErrNone,
                  info: '0};
     sha3_err = '{valid: 1'b0,
-                 code: sha3_pkg::ErrNone,
+                 code: ot_sha3_pkg::ErrNone,
                  info: '0};
   endfunction
 
@@ -1394,7 +1394,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                  code: kmac_pkg::ErrNone,
                  info: '0};
     sha3_err = '{valid: 1'b0,
-                 code: sha3_pkg::ErrNone,
+                 code: ot_sha3_pkg::ErrNone,
                  info: '0};
 
     app_st = StIdle;
@@ -1454,7 +1454,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
     int key_word_len, key_byte_len;
 
     // Actual hash_mode based on interface or SW register
-    sha3_pkg::sha3_mode_e actual_hash_mode = in_kmac_app ? sha3_pkg::CShake : hash_mode;
+    ot_sha3_pkg::sha3_mode_e actual_hash_mode = in_kmac_app ? ot_sha3_pkg::CShake : hash_mode;
 
     bit use_keymgr_keys = sideload_en || (in_kmac_app && app_mode == AppKeymgr);
 
@@ -1546,18 +1546,18 @@ class kmac_scoreboard extends cip_base_scoreboard #(
       ///////////
       // SHA-3 //
       ///////////
-      sha3_pkg::Sha3: begin
+      ot_sha3_pkg::Sha3: begin
         case (strength)
-          sha3_pkg::L224: begin
+          ot_sha3_pkg::L224: begin
             digestpp_dpi_pkg::c_dpi_sha3_224(msg_arr, msg_arr.size(), dpi_digest);
           end
-          sha3_pkg::L256: begin
+          ot_sha3_pkg::L256: begin
             digestpp_dpi_pkg::c_dpi_sha3_256(msg_arr, msg_arr.size(), dpi_digest);
           end
-          sha3_pkg::L384: begin
+          ot_sha3_pkg::L384: begin
             digestpp_dpi_pkg::c_dpi_sha3_384(msg_arr, msg_arr.size(), dpi_digest);
           end
-          sha3_pkg::L512: begin
+          ot_sha3_pkg::L512: begin
             digestpp_dpi_pkg::c_dpi_sha3_512(msg_arr, msg_arr.size(), dpi_digest);
           end
           default: begin
@@ -1568,12 +1568,12 @@ class kmac_scoreboard extends cip_base_scoreboard #(
       ///////////
       // SHAKE //
       ///////////
-      sha3_pkg::Shake: begin
+      ot_sha3_pkg::Shake: begin
         case (strength)
-          sha3_pkg::L128: begin
+          ot_sha3_pkg::L128: begin
             digestpp_dpi_pkg::c_dpi_shake128(msg_arr, msg_arr.size(), output_len_bytes, dpi_digest);
           end
-          sha3_pkg::L256: begin
+          ot_sha3_pkg::L256: begin
             digestpp_dpi_pkg::c_dpi_shake256(msg_arr, msg_arr.size(), output_len_bytes, dpi_digest);
           end
           default: begin
@@ -1584,7 +1584,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
       ////////////
       // CSHAKE //
       ////////////
-      sha3_pkg::CShake: begin
+      ot_sha3_pkg::CShake: begin
         // Get the fname and custom_str string values from the writes to PREFIX csrs
         get_fname_and_custom_str(in_kmac_app, fname, custom_str);
 
@@ -1607,7 +1607,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
           `uvm_info(`gfn, $sformatf("dpi_key_arr: %0p", dpi_key_arr), UVM_HIGH)
 
           case (strength)
-            sha3_pkg::L128: begin
+            ot_sha3_pkg::L128: begin
               if (xof_en) begin
                 digestpp_dpi_pkg::c_dpi_kmac128_xof(msg_arr, msg_arr.size(),
                                                     dpi_key_arr, dpi_key_arr.size(),
@@ -1620,7 +1620,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                                                 output_len_bytes, dpi_digest);
               end
             end
-            sha3_pkg::L256: begin
+            ot_sha3_pkg::L256: begin
               if (xof_en) begin
                 digestpp_dpi_pkg::c_dpi_kmac256_xof(msg_arr, msg_arr.size(),
                                                     dpi_key_arr, dpi_key_arr.size(),
@@ -1640,11 +1640,11 @@ class kmac_scoreboard extends cip_base_scoreboard #(
         end else begin
           // regular cshake - used for otp_ctrl/rom_ctrl application interfaces
           case (strength)
-            sha3_pkg::L128: begin
+            ot_sha3_pkg::L128: begin
               digestpp_dpi_pkg::c_dpi_cshake128(msg_arr, fname, custom_str, msg_arr.size(),
                                                 output_len_bytes, dpi_digest);
             end
-            sha3_pkg::L256: begin
+            ot_sha3_pkg::L256: begin
               digestpp_dpi_pkg::c_dpi_cshake256(msg_arr, fname, custom_str, msg_arr.size(),
                                                 output_len_bytes, dpi_digest);
             end
@@ -1674,18 +1674,18 @@ class kmac_scoreboard extends cip_base_scoreboard #(
     xof_en = 0;
     case (hash_mode)
       // For SHA3 hashes, the output length is the same as the security strength.
-      sha3_pkg::Sha3: begin
+      ot_sha3_pkg::Sha3: begin
         case (strength)
-          sha3_pkg::L224: begin
+          ot_sha3_pkg::L224: begin
             output_len = 224 / 8; // 28
           end
-          sha3_pkg::L256: begin
+          ot_sha3_pkg::L256: begin
             output_len = 256 / 8; // 32
           end
-          sha3_pkg::L384: begin
+          ot_sha3_pkg::L384: begin
             output_len = 384 / 8; // 48
           end
-          sha3_pkg::L512: begin
+          ot_sha3_pkg::L512: begin
             output_len = 512 / 8; // 64
           end
           default: begin
@@ -1695,13 +1695,13 @@ class kmac_scoreboard extends cip_base_scoreboard #(
       end
       // For Shake hashes, the output length isn't encoded anywhere,
       // so we just return the length of the state digest array.
-      sha3_pkg::Shake: begin
+      ot_sha3_pkg::Shake: begin
         output_len = digest_share0.size();
       end
       // CShake is where things get more interesting.
       // We need to essentially decode the encoded output length that is
       // written to the msgfifo as a post-fix to the actual message.
-      sha3_pkg::CShake: begin
+      ot_sha3_pkg::CShake: begin
         if (cfg.enable_full_kmac) begin
           bit [MAX_ENCODE_WIDTH-1:0] full_len = '0;
           // the very last byte written to msgfifo is the number of bytes that

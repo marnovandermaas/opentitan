@@ -38,9 +38,9 @@ class kmac_app_vseq extends kmac_sideload_vseq;
       }
     } else {
       if (kmac_en) {
-        hash_mode == sha3_pkg::CShake;
+        hash_mode == ot_sha3_pkg::CShake;
       } else {
-        hash_mode != sha3_pkg::CShake;
+        hash_mode != ot_sha3_pkg::CShake;
       }
     }
   }

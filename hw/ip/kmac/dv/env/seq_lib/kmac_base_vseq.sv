@@ -38,10 +38,10 @@ class kmac_base_vseq extends cip_base_vseq #(
   rand kmac_pkg::key_len_e key_len;
 
   // hashing mode (sha3/shake/cshake)
-  rand sha3_pkg::sha3_mode_e hash_mode;
+  rand ot_sha3_pkg::sha3_mode_e hash_mode;
 
   // security strength
-  rand sha3_pkg::keccak_strength_e strength;
+  rand ot_sha3_pkg::keccak_strength_e strength;
 
   // endianness of message and secret key.
   // 0: little endian
@@ -116,7 +116,7 @@ class kmac_base_vseq extends cip_base_vseq #(
   // When creating errors by issue the wrong SW command, we need to have access
   // to what operational state to send an erroneous command in,
   // as well as the proper random incorrect command to send.
-  rand sha3_pkg::sha3_st_e err_sw_cmd_seq_st;
+  rand ot_sha3_pkg::sha3_st_e err_sw_cmd_seq_st;
   rand kmac_pkg::kmac_cmd_e err_sw_cmd_seq_cmd;
 
   // Entropy related variables
@@ -142,19 +142,19 @@ class kmac_base_vseq extends cip_base_vseq #(
   // KMAC HWIP only uses CSHAKE mode for KMAC hashing
   constraint hash_mode_c {
     if (kmac_en) {
-      hash_mode == sha3_pkg::CShake;
+      hash_mode == ot_sha3_pkg::CShake;
     } else if (full_kmac) {
-      hash_mode != sha3_pkg::CShake;
+      hash_mode != ot_sha3_pkg::CShake;
     }
   }
 
   // output length constraints when using any SHA3 mode
   constraint output_len_sha3_c {
-    if (hash_mode == sha3_pkg::Sha3) {
-      (strength == sha3_pkg::L224) -> (output_len == 28);
-      (strength == sha3_pkg::L256) -> (output_len == 32);
-      (strength == sha3_pkg::L384) -> (output_len == 48);
-      (strength == sha3_pkg::L512) -> (output_len == 64);
+    if (hash_mode == ot_sha3_pkg::Sha3) {
+      (strength == ot_sha3_pkg::L224) -> (output_len == 28);
+      (strength == ot_sha3_pkg::L256) -> (output_len == 32);
+      (strength == ot_sha3_pkg::L384) -> (output_len == 48);
+      (strength == ot_sha3_pkg::L512) -> (output_len == 64);
     }
   }
 
@@ -166,15 +166,15 @@ class kmac_base_vseq extends cip_base_vseq #(
     solve kmac_err_type before strength;
 
     if (kmac_err_type == kmac_pkg::ErrUnexpectedModeStrength) {
-      (hash_mode inside {sha3_pkg::Shake, sha3_pkg::CShake}) ->
-        !(strength inside {sha3_pkg::L128, sha3_pkg::L256});
+      (hash_mode inside {ot_sha3_pkg::Shake, ot_sha3_pkg::CShake}) ->
+        !(strength inside {ot_sha3_pkg::L128, ot_sha3_pkg::L256});
 
-      (hash_mode == sha3_pkg::Sha3) -> (strength == sha3_pkg::L128);
+      (hash_mode == ot_sha3_pkg::Sha3) -> (strength == ot_sha3_pkg::L128);
     } else {
-      (hash_mode inside {sha3_pkg::Shake, sha3_pkg::CShake}) ->
-        (strength inside {sha3_pkg::L128, sha3_pkg::L256});
+      (hash_mode inside {ot_sha3_pkg::Shake, ot_sha3_pkg::CShake}) ->
+        (strength inside {ot_sha3_pkg::L128, ot_sha3_pkg::L256});
 
-      (hash_mode == sha3_pkg::Sha3) -> (strength != sha3_pkg::L128);
+      (hash_mode == ot_sha3_pkg::Sha3) -> (strength != ot_sha3_pkg::L128);
     }
   }
 
@@ -197,24 +197,24 @@ class kmac_base_vseq extends cip_base_vseq #(
   // The block size is calculated by:
   // `(1600 - (2 * strength_in_bits)) / 8`
   constraint keccak_block_size_c {
-    (strength == sha3_pkg::L128) -> (keccak_block_size == 168);
-    (strength == sha3_pkg::L224) -> (keccak_block_size == 144);
-    (strength == sha3_pkg::L256) -> (keccak_block_size == 136);
-    (strength == sha3_pkg::L384) -> (keccak_block_size == 104);
-    (strength == sha3_pkg::L512) -> (keccak_block_size == 72);
+    (strength == ot_sha3_pkg::L128) -> (keccak_block_size == 168);
+    (strength == ot_sha3_pkg::L224) -> (keccak_block_size == 144);
+    (strength == ot_sha3_pkg::L256) -> (keccak_block_size == 136);
+    (strength == ot_sha3_pkg::L384) -> (keccak_block_size == 104);
+    (strength == ot_sha3_pkg::L512) -> (keccak_block_size == 72);
   }
 
   // Create an appropriate incorrect command based on what state to send an error in
   constraint err_sw_cmd_seq_c {
     solve err_sw_cmd_seq_st before err_sw_cmd_seq_cmd;
     if (kmac_err_type == kmac_pkg::ErrSwCmdSequence) {
-      if (err_sw_cmd_seq_st == sha3_pkg::StIdle) {
+      if (err_sw_cmd_seq_st == ot_sha3_pkg::StIdle) {
         err_sw_cmd_seq_cmd inside {CmdProcess, CmdManualRun, CmdDone};
-      } else if (err_sw_cmd_seq_st == sha3_pkg::StAbsorb) {
+      } else if (err_sw_cmd_seq_st == ot_sha3_pkg::StAbsorb) {
         err_sw_cmd_seq_cmd inside {CmdStart, CmdManualRun, CmdDone};
-      } else if (err_sw_cmd_seq_st == sha3_pkg::StSqueeze) {
+      } else if (err_sw_cmd_seq_st == ot_sha3_pkg::StSqueeze) {
         err_sw_cmd_seq_cmd inside {CmdStart, CmdProcess};
-      } else if (err_sw_cmd_seq_st inside {sha3_pkg::StManualRun, sha3_pkg::StFlush}) {
+      } else if (err_sw_cmd_seq_st inside {ot_sha3_pkg::StManualRun, ot_sha3_pkg::StFlush}) {
         err_sw_cmd_seq_cmd != CmdNone;
       }
     }
@@ -882,7 +882,7 @@ class kmac_base_vseq extends cip_base_vseq #(
         // send an incorrect SW command, this will be dropped internally,
         // so need to send the correct command afterwards.
         if (kmac_err_type == kmac_pkg::ErrSwCmdSequence &&
-            err_sw_cmd_seq_st == sha3_pkg::StSqueeze) begin
+            err_sw_cmd_seq_st == ot_sha3_pkg::StSqueeze) begin
           issue_cmd(err_sw_cmd_seq_cmd);
           check_err();
         end

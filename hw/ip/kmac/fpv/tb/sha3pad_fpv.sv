@@ -4,7 +4,7 @@
 //
 
 module sha3pad_fpv
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   parameter  bit EnMasking = 0,
   localparam int Share = (EnMasking) ? 2 : 1

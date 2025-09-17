@@ -19,14 +19,14 @@ class kmac_test_vectors_kmac_vseq extends kmac_test_vectors_base_vseq;
   virtual function void randomize_cfg(test_vectors_pkg::test_vectors_t vector);
     int vector_len = vector.customization_str.len();
     `DV_CHECK_RANDOMIZE_WITH_FATAL(this,
-      hash_mode == sha3_pkg::CShake;
+      hash_mode == ot_sha3_pkg::CShake;
       kmac_en == 1;
       xof_en == is_xof_test_vectors;
       output_len == vector.digest_length_byte;
       if (vector.security_strength == 128) {
-        strength == sha3_pkg::L128;
+        strength == ot_sha3_pkg::L128;
       } else if (vector.security_strength == 256) {
-        strength == sha3_pkg::L256;
+        strength == ot_sha3_pkg::L256;
       }
       // set key_len CSR
       if (vector.key_length_word * 32 == 128) {

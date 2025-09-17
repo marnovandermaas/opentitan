@@ -15,7 +15,7 @@ module kmac_reduced_tb #(
 
   import kmac_pkg::*;
   import kmac_reg_pkg::*;
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 
   // EnMasking: Enable masking security hardening inside keccak_round.
   parameter bit EnMasking = 1;

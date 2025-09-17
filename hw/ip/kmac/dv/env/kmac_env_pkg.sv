@@ -84,12 +84,12 @@ package kmac_env_pkg;
 
   // Existing parameters:
   //
-  // sha3_pkg::MsgWidth = 64 -> width of internal datapath
+  // ot_sha3_pkg::MsgWidth = 64 -> width of internal datapath
   //
-  // sha3_pkg::StateW = 1600 -> represents width of Keccak state
+  // ot_sha3_pkg::StateW = 1600 -> represents width of Keccak state
 
   // keccak datapath (lane) size
-  localparam int W = sha3_pkg::StateW / 25;
+  localparam int W = ot_sha3_pkg::StateW / 25;
 
   // log_2(W)
   localparam int L = $clog2(W);

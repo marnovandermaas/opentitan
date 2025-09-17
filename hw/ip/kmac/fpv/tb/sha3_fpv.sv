@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 module sha3_fpv
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   // Enable Masked Keccak if 1
   parameter  bit EnMasking = 0,

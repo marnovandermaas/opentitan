@@ -13,7 +13,7 @@ interface kmac_cov_if
 
   `include "dv_fcov_macros.svh"
 
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 
   covergroup cmd_process_cg @(sw_cmd_process == 1);
     kmac_keccak_state: coverpoint keccak_st {

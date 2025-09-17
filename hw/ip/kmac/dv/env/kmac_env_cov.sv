@@ -26,15 +26,15 @@
 
 // creates the cross bins for all XOF functions
 `define XOF_CROSS_CG(strength_cg, valid_mode_expr) \
-      bins valid = ``valid_mode_expr`` && binsof(``strength_cg``) intersect {sha3_pkg::L128, sha3_pkg::L256}; \
+      bins valid = ``valid_mode_expr`` && binsof(``strength_cg``) intersect {ot_sha3_pkg::L128, ot_sha3_pkg::L256}; \
       ignore_bins invalid_mode = !``valid_mode_expr``; \
-      ignore_bins invalid_strength = !binsof(``strength_cg``) intersect {sha3_pkg::L128, sha3_pkg::L256};
+      ignore_bins invalid_strength = !binsof(``strength_cg``) intersect {ot_sha3_pkg::L128, ot_sha3_pkg::L256};
 
 // creates the cross bins for SHA3 functions
 `define SHA3_CROSS_CG(mode_cg, strength_cg) \
-    bins valid = binsof(``mode_cg``) intersect {sha3_pkg::Sha3}; \
-    ignore_bins invalid_mode = !binsof(``mode_cg``) intersect {sha3_pkg::Sha3}; \
-    ignore_bins invalid_strength = binsof(``strength_cg``) intersect {sha3_pkg::L128};
+    bins valid = binsof(``mode_cg``) intersect {ot_sha3_pkg::Sha3}; \
+    ignore_bins invalid_mode = !binsof(``mode_cg``) intersect {ot_sha3_pkg::Sha3}; \
+    ignore_bins invalid_strength = binsof(``strength_cg``) intersect {ot_sha3_pkg::L128};
 
 // creates a coverpoint to cover different TLUL access granularities
 `define MASK_CP(name, mask) \
@@ -47,8 +47,8 @@
 
 
 covergroup config_masked_cg with function sample(bit kmac, bit xof,
-                                                 sha3_pkg::keccak_strength_e kstrength,
-                                                 sha3_pkg::sha3_mode_e kmode,
+                                                 ot_sha3_pkg::keccak_strength_e kstrength,
+                                                 ot_sha3_pkg::sha3_mode_e kmode,
                                                  kmac_pkg::key_len_e key,
                                                  bit msg_endianness,
                                                  bit state_endianness,
@@ -70,12 +70,12 @@ covergroup config_masked_cg with function sample(bit kmac, bit xof,
 
   cshake_cross: cross mode, strength, msg_endian, state_endian,
                                entropy_mode, entropy_fast_process {
-    `XOF_CROSS_CG(strength, binsof(mode) intersect {sha3_pkg::CShake})
+    `XOF_CROSS_CG(strength, binsof(mode) intersect {ot_sha3_pkg::CShake})
   }
 
   shake_cross: cross mode, strength, msg_endian, state_endian,
                               entropy_mode, entropy_fast_process {
-    `XOF_CROSS_CG(strength, binsof(mode) intersect {sha3_pkg::Shake})
+    `XOF_CROSS_CG(strength, binsof(mode) intersect {ot_sha3_pkg::Shake})
   }
 
   sha3_cross: cross mode, strength, msg_endian, state_endian,
@@ -90,8 +90,8 @@ endgroup
 // Declare this outside of `kmac_env_cov` so that we can conditionally instantiate this in the
 // `build_phase` depending on a value in the env_cfg object.
 covergroup config_unmasked_cg with function sample(bit kmac, bit xof,
-                                                   sha3_pkg::keccak_strength_e kstrength,
-                                                   sha3_pkg::sha3_mode_e kmode,
+                                                   ot_sha3_pkg::keccak_strength_e kstrength,
+                                                   ot_sha3_pkg::sha3_mode_e kmode,
                                                    kmac_pkg::key_len_e key,
                                                    bit msg_endianness,
                                                    bit state_endianness,
@@ -105,11 +105,11 @@ covergroup config_unmasked_cg with function sample(bit kmac, bit xof,
   }
 
   cshake_cross: cross mode, strength, msg_endian, state_endian {
-    `XOF_CROSS_CG(strength, binsof(mode) intersect {sha3_pkg::CShake})
+    `XOF_CROSS_CG(strength, binsof(mode) intersect {ot_sha3_pkg::CShake})
   }
 
   shake_cross: cross mode, strength, msg_endian, state_endian {
-    `XOF_CROSS_CG(strength, binsof(mode) intersect {sha3_pkg::Shake})
+    `XOF_CROSS_CG(strength, binsof(mode) intersect {ot_sha3_pkg::Shake})
   }
 
   sha3_cross: cross mode, strength, msg_endian, state_endian {
@@ -165,13 +165,13 @@ class app_cg_wrap;
     }
   endgroup
 
-  covergroup app_cfg_reg_cg(string name) with function sample(sha3_pkg::sha3_mode_e sw_hash_mode);
+  covergroup app_cfg_reg_cg(string name) with function sample(ot_sha3_pkg::sha3_mode_e sw_hash_mode);
     option.per_instance = 1;
     option.name = name;
     sw_configured_hash_mode: coverpoint sw_hash_mode {
-      bins sha3   = {sha3_pkg::Sha3};
-      bins shake  = {sha3_pkg::Shake};
-      bins cshake = {sha3_pkg::CShake};
+      bins sha3   = {ot_sha3_pkg::Sha3};
+      bins shake  = {ot_sha3_pkg::Shake};
+      bins cshake = {ot_sha3_pkg::CShake};
     }
   endgroup
 
@@ -188,7 +188,7 @@ class app_cg_wrap;
     app_cg.sample(single_beat, strb, err, is_done, in_keccak);
   endfunction
 
-  function void app_cfg_reg_sample(sha3_pkg::sha3_mode_e sw_hash_mode);
+  function void app_cfg_reg_sample(ot_sha3_pkg::sha3_mode_e sw_hash_mode);
     app_cfg_reg_cg.sample(sw_hash_mode);
   endfunction
 endclass
@@ -254,12 +254,12 @@ class kmac_env_cov extends cip_base_env_cov #(.CFG_T(kmac_env_cfg));
   endgroup
 
   covergroup msgfifo_level_cg with function sample(bit fifo_empty, bit fifo_full, bit [4:0] fifo_depth,
-                                                   sha3_pkg::sha3_mode_e mode, bit kmac_en);
+                                                   ot_sha3_pkg::sha3_mode_e mode, bit kmac_en);
     kmac_mode: coverpoint kmac_en;
     hash_mode: coverpoint mode {
-      bins sha3   = {sha3_pkg::Sha3};
-      bins shake  = {sha3_pkg::Shake};
-      bins cshake = {sha3_pkg::CShake};
+      bins sha3   = {ot_sha3_pkg::Sha3};
+      bins shake  = {ot_sha3_pkg::Shake};
+      bins cshake = {ot_sha3_pkg::CShake};
     }
     msgfifo_empty:  coverpoint fifo_empty;
     msgfifo_full:   coverpoint fifo_full;
@@ -296,8 +296,8 @@ class kmac_env_cov extends cip_base_env_cov #(.CFG_T(kmac_env_cfg));
 
   covergroup error_cg with function sample(kmac_pkg::err_code_e kmac_err,
                                            kmac_pkg::kmac_cmd_e kcmd,
-                                           sha3_pkg::sha3_mode_e kmode,
-                                           sha3_pkg::keccak_strength_e kstrength);
+                                           ot_sha3_pkg::sha3_mode_e kmode,
+                                           ot_sha3_pkg::keccak_strength_e kstrength);
     kmac_err_code: coverpoint kmac_err {
       ignore_bins ignore = {kmac_pkg::ErrNone};
       // Covered by direct sequence, if scb enabled for those seq, can remove it from this list.
@@ -323,51 +323,51 @@ class kmac_env_cov extends cip_base_env_cov #(.CFG_T(kmac_env_cfg));
 
     all_invalid_mode_strength_cfgs: cross kmac_err_code, mode, strength {
       bins sha3_128_cfgs = binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-                           binsof(mode) intersect {sha3_pkg::Sha3} &&
-                           binsof(strength) intersect {sha3_pkg::L128};
+                           binsof(mode) intersect {ot_sha3_pkg::Sha3} &&
+                           binsof(strength) intersect {ot_sha3_pkg::L128};
 
       bins shake_224_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::Shake} &&
-          binsof(strength) intersect {sha3_pkg::L224};
+          binsof(mode) intersect {ot_sha3_pkg::Shake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L224};
 
       bins shake_384_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::Shake} &&
-          binsof(strength) intersect {sha3_pkg::L384};
+          binsof(mode) intersect {ot_sha3_pkg::Shake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L384};
 
       bins shake_512_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::Shake} &&
-          binsof(strength) intersect {sha3_pkg::L512};
+          binsof(mode) intersect {ot_sha3_pkg::Shake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L512};
 
       bins cshake_224_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::CShake} &&
-          binsof(strength) intersect {sha3_pkg::L224};
+          binsof(mode) intersect {ot_sha3_pkg::CShake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L224};
 
       bins cshake_384_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::CShake} &&
-          binsof(strength) intersect {sha3_pkg::L384};
+          binsof(mode) intersect {ot_sha3_pkg::CShake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L384};
 
       bins cshake_512_invalid_cfg =
           binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} &&
-          binsof(mode) intersect {sha3_pkg::CShake} &&
-          binsof(strength) intersect {sha3_pkg::L512};
+          binsof(mode) intersect {ot_sha3_pkg::CShake} &&
+          binsof(strength) intersect {ot_sha3_pkg::L512};
 
       ignore_bins ignore = !binsof(kmac_err_code) intersect {kmac_pkg::ErrUnexpectedModeStrength} ||
-                           ((binsof(mode) intersect {sha3_pkg::Sha3} &&
-                             !binsof(strength) intersect {sha3_pkg::L128}) ||
-                            (binsof(mode) intersect {sha3_pkg::Shake, sha3_pkg::CShake} &&
-                             binsof(strength) intersect {sha3_pkg::L128, sha3_pkg::L256}));
+                           ((binsof(mode) intersect {ot_sha3_pkg::Sha3} &&
+                             !binsof(strength) intersect {ot_sha3_pkg::L128}) ||
+                            (binsof(mode) intersect {ot_sha3_pkg::Shake, ot_sha3_pkg::CShake} &&
+                             binsof(strength) intersect {ot_sha3_pkg::L128, ot_sha3_pkg::L256}));
    }
   endgroup
 
   function void sample_cfg(bit kmac,
                            bit xof,
-                           sha3_pkg::keccak_strength_e kstrength,
-                           sha3_pkg::sha3_mode_e kmode,
+                           ot_sha3_pkg::keccak_strength_e kstrength,
+                           ot_sha3_pkg::sha3_mode_e kmode,
                            kmac_pkg::key_len_e key_len,
                            bit msg_endianness,
                            bit state_endianness,

@@ -272,7 +272,7 @@ class kmac_smoke_vseq extends kmac_base_vseq;
         // issue an incorrect SW command, this will be dropped internally,
         // so need to send correct command afterwards.
         if (kmac_err_type == kmac_pkg::ErrSwCmdSequence &&
-            err_sw_cmd_seq_st == sha3_pkg::StIdle) begin
+            err_sw_cmd_seq_st == ot_sha3_pkg::StIdle) begin
           issue_cmd(err_sw_cmd_seq_cmd);
           check_err();
         end
@@ -303,7 +303,7 @@ class kmac_smoke_vseq extends kmac_base_vseq;
         // issue an incorrect SW command, this will be dropped internally,
         // so need to send the correct command afterwards.
         if (kmac_err_type == kmac_pkg::ErrSwCmdSequence &&
-            err_sw_cmd_seq_st == sha3_pkg::StAbsorb) begin
+            err_sw_cmd_seq_st == ot_sha3_pkg::StAbsorb) begin
           issue_cmd(err_sw_cmd_seq_cmd);
           check_err();
         end
@@ -338,7 +338,7 @@ class kmac_smoke_vseq extends kmac_base_vseq;
         // issue an incorrect SW command, this will be dropped internally,
         // so need to send the correct command afterwards.
         if (kmac_err_type == kmac_pkg::ErrSwCmdSequence &&
-            err_sw_cmd_seq_st == sha3_pkg::StSqueeze) begin
+            err_sw_cmd_seq_st == ot_sha3_pkg::StSqueeze) begin
           issue_cmd(err_sw_cmd_seq_cmd);
           check_err();
         end
