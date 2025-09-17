@@ -5,10 +5,10 @@
 // This module is the single round keccak permutation module
 // It supports Keccak with up to 1600b of state
 
-`include "caliptra_prim_assert.sv"
+`include "prim_assert.sv"
 
 module ot_keccak_2share
-  import caliptra_prim_mubi_pkg::*;
+  import prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 
@@ -238,7 +238,7 @@ module ot_keccak_2share
         assign unused_out_prd = ^{dom_in_rand_ext_i, out_prd[rot_int(x, 5)]};
       end
 
-      caliptra_prim_dom_and_2share #(
+      prim_dom_and_2share #(
         .DW (WSheetHalf), // a half sheet
         .Pipeline(1) // Process the full sheet in 3 clock cycles. This reduces
                      // SCA leakage.
@@ -332,18 +332,18 @@ module ot_keccak_2share
   // Assertions //
   ////////////////
 
-  `CALIPTRA_ASSERT_INIT(ValidWidth_A,
+  `ASSERT_INIT(ValidWidth_A,
       EnMasking == 0 && Width inside {25, 50, 100, 200, 400, 800, 1600} ||
       EnMasking == 1 && Width inside {50, 100, 200, 400, 800, 1600})
-  `CALIPTRA_ASSERT_INIT(ValidW_A, W inside {1, 2, 4, 8, 16, 32, 64})
-  `CALIPTRA_ASSERT_INIT(ValidL_A, L inside {0, 1, 2, 3, 4, 5, 6})
-  `CALIPTRA_ASSERT_INIT(ValidRound_A, MaxRound <= 24) // Keccak-f only
+  `ASSERT_INIT(ValidW_A, W inside {1, 2, 4, 8, 16, 32, 64})
+  `ASSERT_INIT(ValidL_A, L inside {0, 1, 2, 3, 4, 5, 6})
+  `ASSERT_INIT(ValidRound_A, MaxRound <= 24) // Keccak-f only
 
   // phase_sel_i shall stay for two cycle after change to 1.
   lc_ctrl_pkg::lc_tx_t unused_lc_sig;
   assign unused_lc_sig = lc_escalate_en_i;
   if (EnMasking) begin : gen_selperiod_chk
-    `CALIPTRA_ASSUME(SelStayTwoCycleIfTrue_A,
+    `ASSUME(SelStayTwoCycleIfTrue_A,
         ($past(phase_sel_i) == MuBi4False) && (phase_sel_i == MuBi4True)
         |=> phase_sel_i == MuBi4True, clk_i, !rst_ni ||
             lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))

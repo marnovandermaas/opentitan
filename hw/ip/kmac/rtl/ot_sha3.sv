@@ -6,10 +6,10 @@
 //
 // It instantiates a keccak_round with 1600 bits of the state.
 
-`include "caliptra_prim_assert.sv"
+`include "prim_assert.sv"
 
 module ot_sha3
-  import caliptra_prim_mubi_pkg::*;
+  import prim_mubi_pkg::*;
   import ot_sha3_pkg::*;
 #(
   // Enable Masked Keccak if 1
@@ -225,7 +225,7 @@ module ot_sha3
   ///////////////////
 
   // State Register
-  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
+  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
 
 
   // Next State and Output Logic
@@ -497,7 +497,7 @@ module ot_sha3
   ////////////////
 
   // The Keccak core can only be active when the run REQ is ACKed.
-  `CALIPTRA_ASSERT(KeccakIdleWhenNoRunHs_A,
+  `ASSERT(KeccakIdleWhenNoRunHs_A,
       u_keccak.keccak_st inside {KeccakStActive,
                                  KeccakStPhase1,
                                  KeccakStPhase2Cycle1,
@@ -506,27 +506,27 @@ module ot_sha3
       run_req_o && run_ack_i)
 
   // Unknown check for case statement
-  `CALIPTRA_ASSERT(MuxSelKnown_A, mux_sel inside {MuxGuard, MuxRelease})
-  `CALIPTRA_ASSERT(FsmKnown_A, st inside {StIdle_sparse, StAbsorb_sparse, StSqueeze_sparse,
+  `ASSERT(MuxSelKnown_A, mux_sel inside {MuxGuard, MuxRelease})
+  `ASSERT(FsmKnown_A, st inside {StIdle_sparse, StAbsorb_sparse, StSqueeze_sparse,
                                  StManualRun_sparse, StFlush_sparse, StTerminalError_sparse})
 
   // `state` shall be 0 in invalid
   if (EnMasking) begin: gen_chk_digest_masked
-    `CALIPTRA_ASSERT(StateZeroInvalid_A, !state_valid_o |-> ((|state_o[0]) | (|state_o[1])) == 1'b 0)
+    `ASSERT(StateZeroInvalid_A, !state_valid_o |-> ((|state_o[0]) | (|state_o[1])) == 1'b 0)
   end else begin : gen_chk_digest_unmasked
-    `CALIPTRA_ASSERT(StateZeroInvalid_A, !state_valid_o |-> (|state_o[0]) == 1'b 0)
+    `ASSERT(StateZeroInvalid_A, !state_valid_o |-> (|state_o[0]) == 1'b 0)
   end
 
   // `state_valid_o` asserts only in between the completion and done
-  //`CALIPTRA_ASSERT(StateValidPeriod_A, state_valid_o |-> )
+  //`ASSERT(StateValidPeriod_A, state_valid_o |-> )
 
   // skip the msg interface assertions as they are in ot_sha3pad.sv
 
   // Software run signal happens in Squeezing stage
-  `CALIPTRA_ASSUME(SwRunInSqueezing_a, run_i |-> error_o.valid || (st == StSqueeze_sparse))
+  `ASSUME(SwRunInSqueezing_a, run_i |-> error_o.valid || (st == StSqueeze_sparse))
 
   // If control received but not propagated into submodules, it is error condition
-  `CALIPTRA_ASSERT(ErrDetection_A, error_o.valid
+  `ASSERT(ErrDetection_A, error_o.valid
     |-> {start_i,      process_i,      run_i,         done_i}
      != {keccak_start, keccak_process, sw_keccak_run, keccak_done})
 

@@ -4,7 +4,7 @@
 //
 // Keccak state read
 
-`include "caliptra_prim_assert.sv"
+`include "prim_assert.sv"
 
 module kmac_staterd
   import prim_mubi_pkg::*;
