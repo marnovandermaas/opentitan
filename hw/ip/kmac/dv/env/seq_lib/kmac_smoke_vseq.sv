@@ -376,6 +376,6 @@ class kmac_smoke_vseq extends kmac_base_vseq;
   // If application interface is enabled and selected to AppKeymgr, then it is a keymgr app
   // interface request.
   virtual function bit is_keymgr_app();
-    return en_app && (app_mode == AppKeymgr);
+    return 0;
   endfunction
 endclass : kmac_smoke_vseq

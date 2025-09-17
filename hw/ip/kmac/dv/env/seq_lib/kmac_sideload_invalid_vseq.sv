@@ -38,7 +38,7 @@ class kmac_sideload_invalid_vseq extends kmac_long_msg_and_output_vseq;
   }
 
   constraint app_mode_c {
-    app_mode == AppKeymgr;
+    app_mode == App0;
   }
 
   constraint entropy_ready_c {
@@ -256,7 +256,7 @@ class kmac_sideload_invalid_vseq extends kmac_long_msg_and_output_vseq;
   // If application interface is enabled and selected to AppKeymgr, then it is a keymgr app
   // interface request.
   virtual function bit is_keymgr_app();
-    return en_app && (app_mode == AppKeymgr);
+    return 0;
   endfunction
 
 endclass

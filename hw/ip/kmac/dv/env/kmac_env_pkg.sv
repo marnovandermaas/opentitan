@@ -145,9 +145,8 @@ package kmac_env_pkg;
   } kmac_cmd_idx_e;
 
   typedef enum int {
-    AppKeymgr,
-    AppLc,
-    AppRom
+    App0,
+    App1
   } kmac_app_e;
 
   // state values of the App FSM

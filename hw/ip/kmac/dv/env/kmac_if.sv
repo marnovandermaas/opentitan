@@ -18,12 +18,9 @@ interface kmac_if(input clk_i, input rst_ni);
 
   `ASSERT(KmacMaskingO_A, (`EN_MASKING && `EN_FULL_KMAC) == en_masking_o)
 
-  `ASSERT(AppKeymgrErrOutputZeros_A, app_rsp[AppKeymgr].error |->
-          app_rsp[AppKeymgr].digest_share0 == 0 && app_rsp[AppKeymgr].digest_share1 == 0)
+  `ASSERT(AppKeymgrErrOutputZeros_A, app_rsp[App0].error |->
+          app_rsp[App0].digest_share0 == 0 && app_rsp[App0].digest_share1 == 0)
 
-  `ASSERT(AppLcErrOutputZeros_A, app_rsp[AppLc].error |->
-          app_rsp[AppLc].digest_share0 == 0 && app_rsp[AppLc].digest_share1 == 0)
-
-  `ASSERT(AppRomErrOutputZeros_A, app_rsp[AppRom].error |->
-          app_rsp[AppRom].digest_share0 == 0 && app_rsp[AppRom].digest_share1 == 0)
+  `ASSERT(AppLcErrOutputZeros_A, app_rsp[App1].error |->
+          app_rsp[App1].digest_share0 == 0 && app_rsp[App1].digest_share1 == 0)
 endinterface

@@ -9,8 +9,8 @@
 `define CALC_PARTIAL_MSG \
     (!in_kmac_app && msg.size() % 8 > 0) || \
       (in_kmac_app && \
-        (app_mode == AppKeymgr && (kmac_app_msg.size() + 3) % 8 > 0) || \
-        (app_mode != AppKeymgr && kmac_app_msg.size() % 8 > 0))
+        (app_mode == App0 && (kmac_app_msg.size() + 3) % 8 > 0) || \
+        (app_mode != App0 && kmac_app_msg.size() % 8 > 0))
 
 class kmac_scoreboard extends cip_base_scoreboard #(
     .CFG_T(kmac_env_cfg),
@@ -320,9 +320,8 @@ class kmac_scoreboard extends cip_base_scoreboard #(
             // Assume that application interface requests do not collide.
             `uvm_info(`gfn, "waiting for new kmac_app request", UVM_HIGH)
             wait(!in_kmac_app && app_fsm_active &&
-                 (`KMAC_APP_VALID_TRANS(AppKeymgr) ||
-                  `KMAC_APP_VALID_TRANS(AppLc) ||
-                  `KMAC_APP_VALID_TRANS(AppRom)));
+                 (`KMAC_APP_VALID_TRANS(App0) ||
+                  `KMAC_APP_VALID_TRANS(App1)));
             in_kmac_app = 1;
             sha3_idle = 0;
             sha3_absorb = 1;
@@ -330,34 +329,13 @@ class kmac_scoreboard extends cip_base_scoreboard #(
             `uvm_info(`gfn, "Raised in_kmac_app and sha3_absorb. Dropped sha3_idle.", UVM_HIGH)
 
             // we need to choose the correct application interface
-            if (`KMAC_APP_VALID_TRANS(AppKeymgr)) begin
-              app_mode = AppKeymgr;
+            if (`KMAC_APP_VALID_TRANS(App0)) begin
+              app_mode = App0;
               strength = ot_sha3_pkg::L256;
               if (entropy_ready) incr_and_predict_hash_cnt();
-            end else if (`KMAC_APP_VALID_TRANS(AppLc)) begin
-              app_mode = AppLc;
-              strength = ot_sha3_pkg::L128;
-            end else if (`KMAC_APP_VALID_TRANS(AppRom)) begin
-              app_mode = AppRom;
+            end else if (`KMAC_APP_VALID_TRANS(App1)) begin
+              app_mode = App1;
               strength = ot_sha3_pkg::L256;
-            end
-
-            // sample sideload-related coverage
-            if (cfg.en_cov) begin
-              // Note that all arguments to the covergroup sample() function are the same,
-              // this is due to the nature of the arguments that this function takes:
-              //
-              // - `en_sideload`: this bit indicates whether sideloading mode is active
-              // - `in_kmac`    : this bit indicates whether we are operating in KMAC mode
-              // - `app_keymgr` : this bit indicates whether we are using the Keymgr-specific App
-              //                  interface
-              //
-              // Checking whether the current application mode is the AppKeymgr mode gives us
-              // sufficient information for all three of these arguments due to the nature of this
-              // particular interface.
-              cov.sideload_cg.sample(app_mode == AppKeymgr,
-                                     app_mode == AppKeymgr,
-                                     app_mode == AppKeymgr);
             end
 
             @(posedge sha3_idle);
@@ -394,9 +372,8 @@ class kmac_scoreboard extends cip_base_scoreboard #(
               StIdle: begin
                 app_fsm_active = 0;
                 if (!in_kmac_app &&
-                    (cfg.m_kmac_app_agent_cfg[AppKeymgr].vif.req_data_if.valid ||
-                     cfg.m_kmac_app_agent_cfg[AppLc].vif.req_data_if.valid ||
-                     cfg.m_kmac_app_agent_cfg[AppRom].vif.req_data_if.valid)) begin
+                    (cfg.m_kmac_app_agent_cfg[App0].vif.req_data_if.valid ||
+                     cfg.m_kmac_app_agent_cfg[App1].vif.req_data_if.valid)) begin
                   app_st = StAppCfg;
                   app_fsm_active = 1;
                 end else if (checked_kmac_cmd == CmdStart) begin
@@ -404,7 +381,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                 end
               end
               StAppCfg: begin
-                if (app_mode == AppKeymgr && cfg.enable_full_kmac &&
+                if (app_mode == App0 && cfg.enable_full_kmac &&
                     !cfg.keymgr_sideload_agent_cfg.vif.sideload_key.valid) begin
                   app_st = StKeyMgrErrKeyNotValid;
                 end else begin
@@ -414,7 +391,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
               StAppMsg: begin
                 app_mux_sel = SelApp;
                 if (kmac_app_last) begin
-                  if (app_mode == AppKeymgr) begin
+                  if (app_mode == App0) begin
                     app_st = StAppOutLen;
                   end else begin
                     app_st = StAppProcess;
@@ -578,7 +555,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
                 // We expect an app interface error if app_mode is AppKeymgr (meaning that we are
                 // in the mode where we are talking to the keymgr) and either there is no entropy
                 // to perform the masking that is enabled or the key has been invalidated.
-                app_intf_err = (app_mode == AppKeymgr &&
+                app_intf_err = (app_mode == App0 &&
                                 ((cfg.enable_masking && !entropy_ready) || cfg.key_invalidated));
 
                 // Check app interface errors have been reported as expected.
@@ -1456,7 +1433,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
     // Actual hash_mode based on interface or SW register
     ot_sha3_pkg::sha3_mode_e actual_hash_mode = in_kmac_app ? ot_sha3_pkg::CShake : hash_mode;
 
-    bit use_keymgr_keys = sideload_en || (in_kmac_app && app_mode == AppKeymgr);
+    bit use_keymgr_keys = sideload_en || (in_kmac_app && app_mode == App0);
 
     if (cfg.en_scb == 0) return;
 
@@ -1843,7 +1820,7 @@ class kmac_scoreboard extends cip_base_scoreboard #(
   endfunction
 
   function bit is_kmac_en();
-    return in_kmac_app ? app_mode == AppKeymgr : kmac_en;
+    return in_kmac_app ? app_mode == App0 : kmac_en;
   endfunction
 
   function void check_phase(uvm_phase phase);

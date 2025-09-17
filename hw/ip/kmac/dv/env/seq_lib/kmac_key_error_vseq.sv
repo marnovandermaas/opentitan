@@ -28,7 +28,7 @@ class kmac_key_error_vseq extends kmac_app_vseq;
       kmac_err = '{valid: 1'b1,
                    code: kmac_pkg::ErrKeyNotValid,
                    info: '0};
-      app_mode = AppKeymgr;
+      app_mode = App0;
 
       kmac_init();
       `uvm_info(`gfn, "kmac_init done", UVM_LOW)
