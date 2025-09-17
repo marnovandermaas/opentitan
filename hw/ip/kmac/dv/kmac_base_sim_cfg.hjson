@@ -103,16 +103,6 @@
       run_timeout_mins: 120
     }
     {
-      name: "{name}_sideload"
-      uvm_test_seq: kmac_sideload_vseq
-      run_opts: ["+test_timeout_ns=1_000_000_000"]
-    }
-    {
-      name: "{name}_sideload_invalid"
-      uvm_test_seq: kmac_sideload_invalid_vseq
-      run_opts: ["+test_timeout_ns=1_000_000_000"]
-    }
-    {
       name: "{name}_burst_write"
       uvm_test_seq: kmac_burst_write_vseq
       run_opts: ["+test_timeout_ns=500_000_000"]
@@ -170,18 +160,6 @@
       reseed: 5
     }
     {
-      name: "{name}_test_vectors_kmac"
-      uvm_test_seq: kmac_test_vectors_kmac_vseq
-      run_opts: ["+test_vectors_dir={build_dir}/fusesoc-work/src/lowrisc_dv_test_vectors_0"]
-      reseed: 5
-    }
-    {
-      name: "{name}_test_vectors_kmac_xof"
-      uvm_test_seq: kmac_test_vectors_kmac_xof_vseq
-      run_opts: ["+test_vectors_dir={build_dir}/fusesoc-work/src/lowrisc_dv_test_vectors_0"]
-      reseed: 5
-    }
-    {
       name: "{name}_app"
       uvm_test_seq: kmac_app_vseq
       run_opts: ["+test_timeout_ns=500_000_000"]
@@ -193,11 +171,6 @@
       reseed: 10
     }
     {
-      name: "{name}_entropy_refresh"
-      uvm_test_seq: kmac_entropy_refresh_vseq
-      run_opts: ["+test_timeout_ns=500_000_000"]
-    }
-    {
       name: "{name}_mubi"
       uvm_test_seq: kmac_mubi_vseq
       reseed: 10
@@ -205,27 +178,6 @@
     {
       name: "{name}_error"
       uvm_test_seq: kmac_error_vseq
-    }
-    {
-      name: "{name}_key_error"
-      uvm_test_seq: kmac_key_error_vseq
-    }
-    {
-      name: "{name}_edn_timeout_error"
-      uvm_test_seq: kmac_edn_timeout_error_vseq
-      run_opts: ["+en_scb=0"]
-      reseed: 20
-    }
-    {
-      name: "{name}_entropy_mode_error"
-      uvm_test_seq: kmac_entropy_mode_error_vseq
-      run_opts: ["+en_scb=0"]
-      reseed: 20
-    }
-    {
-      name: "{name}_entropy_ready_error"
-      uvm_test_seq: kmac_entropy_ready_error_vseq
-      reseed: 10
     }
     {
       name: "{name}_lc_escalation"
