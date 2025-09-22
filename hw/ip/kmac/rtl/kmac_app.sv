@@ -623,7 +623,11 @@ module kmac_app
       (mux_sel == SelSw) && (st_d inside {StError, StKeyMgrErrKeyNotValid}) ? 1'b1 : // set
       (st_d == StIdle)                                                      ? 1'b0 : // clear
       err_during_sw_q;                                                               // hold
-
+`ifdef CALIPTRA
+  // In Caliptra st_d can never leave StIdle, so this flop is stuck in reset state.
+  // Removing it to avoids lint errors.
+  assign err_during_sw_q = '0;
+`else
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       err_during_sw_q <= 1'b0;
@@ -631,6 +635,7 @@ module kmac_app
       err_during_sw_q <= err_during_sw_d;
     end
   end
+`endif
 
   //////////////
   // Datapath //
